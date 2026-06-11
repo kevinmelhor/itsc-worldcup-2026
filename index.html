@@ -1250,16 +1250,35 @@
       };
     }
 
-    // Converts an API event into our internal event format
+    // Converts an API event into our internal event format.
+    // The BALLDONTLIE API uses incident_type, incident_class, time_minute, is_home.
     function normalizeEvent(e, match) {
-      // Identify home vs away by matching team id
-      const side = (e.team?.id && match.awayTeam.id && e.team.id === match.awayTeam.id)
-        ? "away" : "home";
+      const side = e.is_home ? "home" : "away";
+
+      const incType  = (e.incident_type  || e.type  || "").toLowerCase();
+      const incClass = (e.incident_class || "").toLowerCase();
+
+      let type;
+      if (incType === "goal") {
+        type = (incClass === "own_goal" || incClass === "own goal") ? "own_goal" : "goal";
+      } else if (incType === "card") {
+        if (incClass === "red" || incClass === "red_card" || incClass === "red card") {
+          type = "red_card";
+        } else if (incClass === "yellowred" || incClass === "yellow_red") {
+          type = "red_card"; // second yellow = red
+        } else {
+          type = "yellow_card";
+        }
+      } else {
+        // Fallback: handle legacy field names just in case
+        type = incType.replace(/\s+/g, "_");
+      }
+
       return {
-        type:   (e.type || "").toLowerCase().replace(/\s+/g, "_"),
+        type,
         team:   side,
-        player: e.player?.name || "",
-        minute: e.minute || 0,
+        player: e.player?.name || e.player?.short_name || "",
+        minute: e.time_minute  || e.minute || 0,
       };
     }
 
