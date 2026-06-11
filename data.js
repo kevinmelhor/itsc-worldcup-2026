@@ -132,7 +132,7 @@ const MOCK_STAFF_PICKS = [
   { name: "Jamie Benavides",           country: "Ecuador",   countryCode: "ec" },
   { name: "Francis Jegede",            country: "France",    countryCode: "fr" },
   { name: "Arely Ciliezar",            country: "Brazil",    countryCode: "br" },
-  { name: "Nicholas Zaster",           country: "Argentina", countryCode: "ar" },
+  { name: "Nick Zaster",           country: "Argentina", countryCode: "ar" },
   { name: "Samantha Bautista",         country: "Colombia",  countryCode: "co" },
   { name: "Abhi Tamboli",              country: "Spain",     countryCode: "es" },
   { name: "Esma Bartu",                country: "Türkiye",   countryCode: "tr" },
