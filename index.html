@@ -280,23 +280,21 @@
 
     #leaderboard-scroll {
       flex: 1;
-      overflow: hidden;
+      overflow: visible;
       position: relative;
     }
 
     #leaderboard-list {
       width: 100%;
-      will-change: transform;
-      transition: transform 0.8s ease-in-out;
     }
 
     .leaderboard-row {
       display: grid;
       /* Rank | Flag+Name+Country | Points | Today */
-      grid-template-columns: 68px 1fr 210px 185px;
+      grid-template-columns: 52px 1fr 160px 150px;
       align-items: center;
-      padding: 0 20px;
-      height: 56px;
+      padding: 0 16px;
+      height: 32px;
       border-bottom: 1px solid var(--border);
       transition: background 0.2s ease;
     }
@@ -320,7 +318,7 @@
     .leaderboard-row.rank-3 { border-left: 3px solid #cd7f32; }
 
     .row-rank {
-      font-size: 26px;
+      font-size: 16px;
       font-weight: 900;
       color: var(--text-muted);
       text-align: center;
@@ -338,18 +336,18 @@
     }
 
     .row-flag {
-      width: 44px;
-      height: 33px;
+      width: 30px;
+      height: 22px;
       object-fit: cover;
-      border-radius: 3px;
+      border-radius: 2px;
       flex-shrink: 0;
     }
 
     .row-flag-fallback {
-      width: 44px;
-      height: 33px;
+      width: 30px;
+      height: 22px;
       background: var(--bg-panel-alt);
-      border-radius: 3px;
+      border-radius: 2px;
       flex-shrink: 0;
     }
 
@@ -358,7 +356,7 @@
     }
 
     .row-name {
-      font-size: 22px;
+      font-size: 15px;
       font-weight: 700;
       color: var(--text-primary);
       white-space: nowrap;
@@ -367,7 +365,7 @@
     }
 
     .row-country {
-      font-size: 14px;
+      font-size: 11px;
       color: var(--text-secondary);
       font-weight: 400;
       white-space: nowrap;
@@ -388,7 +386,7 @@
 
     .row-points {
       text-align: right;
-      font-size: 34px;
+      font-size: 22px;
       font-weight: 800;
       color: var(--text-primary);
       font-variant-numeric: tabular-nums;
@@ -397,7 +395,7 @@
 
     .row-today {
       text-align: right;
-      font-size: 17px;
+      font-size: 13px;
       font-weight: 700;
       font-variant-numeric: tabular-nums;
     }
@@ -937,8 +935,6 @@
       staffPicks:    [],
       groupInfo:     {},  // country name -> group letter (e.g. "A")
       liveMinute:    67,  // Mock mode only
-      scrollOffset:  0,
-      scrollDir:     1,
       lastUpdated:   new Date(),
     };
 
@@ -1296,50 +1292,6 @@
 
     // ============================================================
     // LEADERBOARD AUTO-SCROLL
-    // Scrolls one row at a time every few seconds. Pauses at
-    // the top and bottom. Returns to top after reaching the bottom.
-    // ============================================================
-    const ROW_HEIGHT       = 56;   // px, must match .leaderboard-row height
-    const SCROLL_STEP_MS   = 3500; // how often to scroll one row
-    const SCROLL_PAUSE_MS  = 2500; // pause duration at top and bottom
-
-    function startLeaderboardScroll() {
-      let isPaused = false;
-
-      setInterval(() => {
-        if (isPaused) return;
-
-        const list       = document.getElementById("leaderboard-list");
-        const scroll     = document.getElementById("leaderboard-scroll");
-        const totalRows  = state.leaderboard.length;
-        const visibleH   = scroll.clientHeight;
-        const maxOffset  = Math.max(0, totalRows * ROW_HEIGHT - visibleH);
-
-        if (maxOffset <= 0) return; // Everything fits, no need to scroll
-
-        state.scrollOffset += ROW_HEIGHT * state.scrollDir;
-
-        if (state.scrollOffset >= maxOffset) {
-          // Reached bottom: clamp and pause, then reverse
-          state.scrollOffset = maxOffset;
-          isPaused = true;
-          setTimeout(() => {
-            state.scrollDir   = -1;
-            isPaused = false;
-          }, SCROLL_PAUSE_MS);
-        } else if (state.scrollOffset <= 0) {
-          // Reached top: clamp and pause, then go down again
-          state.scrollOffset = 0;
-          isPaused = true;
-          setTimeout(() => {
-            state.scrollDir   = 1;
-            isPaused = false;
-          }, SCROLL_PAUSE_MS);
-        }
-
-        list.style.transform = `translateY(-${state.scrollOffset}px)`;
-      }, SCROLL_STEP_MS);
-    }
 
     // ============================================================
     // RENDER: TODAY'S MATCHES
@@ -1540,7 +1492,6 @@
       startClock();
       await loadData();
       renderAll();
-      startLeaderboardScroll();
       startLiveTicker();
       setInterval(refresh, REFRESH_INTERVAL_MS);
     })();
