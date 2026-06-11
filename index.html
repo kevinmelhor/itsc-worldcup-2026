@@ -6,7 +6,7 @@
     Fixed 1920x1080 viewport. The browser is set to 1920x1080 fullscreen
     on the Mac mini, so we lock the viewport width here for consistent layout.
   -->
-  <meta name="viewport" content="width=1920, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ITSC World Cup 2026 Challenge</title>
 
   <!-- Inter font from Google Fonts. Clean, modern, great on TV screens. -->
@@ -63,8 +63,8 @@
     }
 
     html, body {
-      width: 1920px;
-      height: 1080px;
+      width: 100vw;
+      height: 100vh;
       overflow: hidden;
       background: var(--bg-base);
       color: var(--text-primary);
@@ -72,6 +72,9 @@
       font-size: 16px;
       line-height: 1.4;
       -webkit-font-smoothing: antialiased;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
     }
 
     /* ============================================================
@@ -80,7 +83,8 @@
     ============================================================ */
     #dashboard {
       display: grid;
-      grid-template-rows: 76px 1fr 164px;
+      grid-template-rows: 76px 1fr 95px;
+      transform-origin: top left;
       grid-template-areas:
         "header"
         "main"
@@ -294,7 +298,7 @@
       grid-template-columns: 44px 1fr 200px 120px;
       align-items: center;
       padding: 0 16px;
-      height: 32px;
+      height: 35px;
       border-bottom: 1px solid var(--border);
       transition: background 0.2s ease;
     }
@@ -359,7 +363,7 @@
     }
 
     .row-name {
-      font-size: 16px;
+      font-size: 17px;
       font-weight: 700;
       color: var(--text-primary);
       white-space: nowrap;
@@ -484,7 +488,7 @@
     ============================================================ */
     #right-panel {
       display: grid;
-      grid-template-rows: 1fr 1fr;
+      grid-template-rows: 2fr 1fr 1fr;
       gap: 10px;
       min-height: 0;
     }
@@ -851,6 +855,78 @@
     .flash-positive { animation: point-flash-pos 1.2s ease forwards; }
     .flash-negative { animation: point-flash-neg 1.2s ease forwards; }
 
+    /* ── Enhanced match card ── */
+    .match-scorers {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+      font-size: 10px;
+      color: var(--text-secondary);
+      min-height: 13px;
+    }
+
+    .match-scorers-home { text-align: left; flex: 1; }
+    .match-scorers-away { text-align: right; flex: 1; }
+
+    .match-cards-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      min-height: 13px;
+    }
+
+    .match-point-impact {
+      margin-top: 5px;
+      border-top: 1px solid var(--border);
+      padding-top: 5px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .impact-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+    }
+
+    .impact-staff  { color: var(--text-secondary); font-weight: 500; }
+    .impact-pts    { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .impact-pts.positive { color: var(--positive); }
+    .impact-pts.negative { color: var(--negative); }
+    .impact-pts.zero     { color: var(--text-muted); }
+
+    /* ── Point Events feed ── */
+    #events-list {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 8px 14px;
+    }
+
+    .event-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      padding: 3px 0;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .event-row:last-child { border-bottom: none; }
+    .event-icon  { font-size: 13px; flex-shrink: 0; }
+    .event-desc  { flex: 1; color: var(--text-secondary); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .event-staff { color: var(--text-primary); font-weight: 600; }
+    .event-delta { font-weight: 700; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+    .event-delta.positive { color: var(--positive); }
+    .event-delta.negative { color: var(--negative); }
+
     /* Scrollbar hidden globally */
     ::-webkit-scrollbar { display: none; }
   </style>
@@ -923,6 +999,15 @@
             <span class="panel-subtitle">Last completed matches</span>
           </div>
           <div id="results-list"></div>
+        </div>
+
+        <!-- POINT EVENTS FEED -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Point Events</span>
+            <span class="panel-subtitle">Events affecting staff scores</span>
+          </div>
+          <div id="events-list"></div>
         </div>
 
       </div>
@@ -1033,6 +1118,31 @@
 
     function formatKickoff(isoString) {
       return formatTime(new Date(isoString));
+    }
+
+    // Returns first names of staff who picked a given country
+    function getStaffForCountry(countryName) {
+      return state.staffPicks
+        .filter(p => p.country === countryName)
+        .map(p => p.name.split(" ")[0]);
+    }
+
+    // Returns tournament day number (Day 1 = June 11 2026)
+    function getTournamentDay() {
+      const start = new Date("2026-06-11T00:00:00");
+      const diff  = Math.floor((Date.now() - start.getTime()) / 86400000);
+      return Math.max(1, diff + 1);
+    }
+
+    // Converts a 2-letter ISO code to a flag emoji (e.g. "mx" → 🇲🇽)
+    function flagEmoji(code) {
+      if (!code) return "";
+      const c = code.toLowerCase();
+      if (c === "gb-eng") return "🏴󠁧󠁢󠁥󠁮󠁧󠁿";
+      if (c === "gb-sct") return "🏴󠁧󠁢󠁳󠁣󠁴󠁿";
+      return [...c.toUpperCase()].map(ch =>
+        String.fromCodePoint(0x1F1E6 + ch.charCodeAt(0) - 65)
+      ).join("");
     }
 
     function flagImg(flagCode, w = 32, h = 24, cssClass = "") {
@@ -1189,7 +1299,7 @@
       const cp = {};
 
       function init(name) {
-        if (!cp[name]) cp[name] = { points: 0, isLive: false, wins: 0, draws: 0, losses: 0, played: 0, goalsFor: 0 };
+        if (!cp[name]) cp[name] = { points: 0, isLive: false, wins: 0, draws: 0, losses: 0, played: 0, goalsFor: 0, yellowCards: 0, redCards: 0, ownGoals: 0 };
       }
 
       for (const m of matches) {
@@ -1206,6 +1316,19 @@
         if (m.status === "live") {
           cp[m.homeTeam.name].isLive = true;
           cp[m.awayTeam.name].isLive = true;
+        }
+
+        for (const e of (m.events || [])) {
+          if (e.type === "yellow_card") {
+            if (e.team === "home") cp[m.homeTeam.name].yellowCards++;
+            else                   cp[m.awayTeam.name].yellowCards++;
+          } else if (e.type === "red_card") {
+            if (e.team === "home") cp[m.homeTeam.name].redCards++;
+            else                   cp[m.awayTeam.name].redCards++;
+          } else if (e.type === "own_goal") {
+            if (e.team === "home") cp[m.homeTeam.name].ownGoals++;
+            else                   cp[m.awayTeam.name].ownGoals++;
+          }
         }
 
         if (m.status === "completed") {
@@ -1225,6 +1348,8 @@
             cp[m.homeTeam.name].draws++;
             cp[m.awayTeam.name].draws++;
           }
+          if (as === 0) cp[m.homeTeam.name].cleanSheets++;
+          if (hs === 0) cp[m.awayTeam.name].cleanSheets++;
         }
       }
       return cp;
@@ -1234,7 +1359,7 @@
       const today = new Date();
 
       const entries = staffPicks.map(pick => {
-        const cp    = countryPoints[pick.country] || { points: 0, isLive: false, wins: 0, draws: 0, losses: 0, played: 0, goalsFor: 0 };
+        const cp    = countryPoints[pick.country] || { points: 0, isLive: false, wins: 0, draws: 0, losses: 0, played: 0, goalsFor: 0, yellowCards: 0, redCards: 0, cleanSheets: 0 };
         const group = state.groupInfo[pick.country] || pick.group || "?";
 
         const hasMatchToday = cp.isLive || state.matches.some(m =>
@@ -1251,11 +1376,15 @@
           points:        cp.points,
           todayPoints:   cp.points,
           isLive:        cp.isLive,
-          wins:          cp.wins   || 0,
-          draws:         cp.draws  || 0,
-          losses:        cp.losses || 0,
-          played:        cp.played || 0,
-          goalsFor:      cp.goalsFor || 0,
+          wins:          cp.wins        || 0,
+          draws:         cp.draws       || 0,
+          losses:        cp.losses      || 0,
+          played:        cp.played      || 0,
+          goalsFor:      cp.goalsFor    || 0,
+          yellowCards:   cp.yellowCards || 0,
+          redCards:      cp.redCards    || 0,
+          cleanSheets:   cp.cleanSheets || 0,
+          ownGoals:      cp.ownGoals    || 0,
           hasMatchToday,
         };
       });
@@ -1398,6 +1527,18 @@
         const todayBadge = entry.hasMatchToday && !entry.isLive
           ? `<span class="row-plays-today">⚽ TODAY</span>` : "";
 
+        const cardLine = (entry.yellowCards > 0 || entry.redCards > 0 || entry.ownGoals > 0)
+          ? `<span style="color:var(--text-muted)">·</span>
+             ${entry.yellowCards > 0 ? `<span title="Yellow cards">🟨 ${entry.yellowCards}</span>` : ""}
+             ${entry.redCards    > 0 ? `<span title="Red cards">🟥 ${entry.redCards}</span>`       : ""}
+             ${entry.ownGoals    > 0 ? `<span title="Own goals">↩️ ${entry.ownGoals}</span>`       : ""}`
+          : "";
+
+        const cleanSheetLine = entry.cleanSheets > 0
+          ? `<span style="color:var(--text-muted)">·</span>
+             <span title="Clean sheets">🧤 ${entry.cleanSheets}</span>`
+          : "";
+
         const record = entry.played > 0
           ? `<span class="row-record">
                <span class="row-record-item w">W${entry.wins}</span>
@@ -1406,6 +1547,8 @@
              </span>
              <span style="color:var(--text-muted)">·</span>
              <span style="color:var(--text-muted)">⚽ ${entry.goalsFor}</span>
+             ${cleanSheetLine}
+             ${cardLine}
              ${todayBadge}`
           : `${todayBadge}`;
 
@@ -1422,7 +1565,7 @@
                 <span class="row-name">${entry.name}</span>
                 ${liveBadge}
                 <span class="row-name-sep">·</span>
-                <span class="row-country">${entry.country}${groupLabel}</span>
+                <span class="row-country">${flagEmoji(entry.countryCode)} ${entry.country}${groupLabel}</span>
               </div>
             </div>
             <div class="row-bar-section">
@@ -1471,16 +1614,6 @@
         const isLive = match.status === "live";
         const minute = isLive && USE_MOCK_DATA ? state.liveMinute : null;
 
-        const homeStaff = getStaffForCountry(match.homeTeam.name);
-        const awayStaff = getStaffForCountry(match.awayTeam.name);
-        const allStaff  = [
-          ...homeStaff.map(n => `${n} (${match.homeTeam.code})`),
-          ...awayStaff.map(n => `${n} (${match.awayTeam.code})`),
-        ];
-        const staffLine = allStaff.length > 0
-          ? `<div class="match-staff-row">Staff: <span class="staff-in-match">${allStaff.join(", ")}</span></div>`
-          : "";
-
         const scoreBlock = isLive
           ? `<div class="match-score-block">
                <div class="match-score">${match.homeScore ?? 0}</div>
@@ -1497,6 +1630,60 @@
         const groupLabel = match.group
           ? `GROUP ${match.group} &middot; MD${match.matchday}`
           : `MD${match.matchday}`;
+
+        // Goal scorers
+        const homeGoals = (match.events || []).filter(e => e.type === "goal" && e.team === "home");
+        const awayGoals = (match.events || []).filter(e => e.type === "goal" && e.team === "away");
+        const homeOG    = (match.events || []).filter(e => e.type === "own_goal" && e.team === "away"); // OG by away = goal for home
+        const awayOG    = (match.events || []).filter(e => e.type === "own_goal" && e.team === "home");
+        const homeScorerText = [...homeGoals.map(e => `⚽ ${e.player} ${e.minute}'`), ...homeOG.map(e => `↩️ ${e.player} ${e.minute}'`)].join("  ");
+        const awayScorerText = [...awayGoals.map(e => `⚽ ${e.player} ${e.minute}'`), ...awayOG.map(e => `↩️ ${e.player} ${e.minute}'`)].join("  ");
+        const scorersRow = (homeScorerText || awayScorerText)
+          ? `<div class="match-scorers">
+               <span class="match-scorers-home">${homeScorerText}</span>
+               <span class="match-scorers-away">${awayScorerText}</span>
+             </div>` : "";
+
+        // Cards in this match
+        const homeYellow = (match.events || []).filter(e => e.type === "yellow_card" && e.team === "home");
+        const awayYellow = (match.events || []).filter(e => e.type === "yellow_card" && e.team === "away");
+        const homeRed    = (match.events || []).filter(e => e.type === "red_card"    && e.team === "home");
+        const awayRed    = (match.events || []).filter(e => e.type === "red_card"    && e.team === "away");
+        const homeCardText = [
+          ...homeYellow.map(e => `🟨 ${e.player} ${e.minute}'`),
+          ...homeRed.map(e    => `🟥 ${e.player} ${e.minute}'`),
+        ].join("  ");
+        const awayCardText = [
+          ...awayYellow.map(e => `🟨 ${e.player} ${e.minute}'`),
+          ...awayRed.map(e    => `🟥 ${e.player} ${e.minute}'`),
+        ].join("  ");
+        const cardsRow = (homeCardText || awayCardText)
+          ? `<div class="match-cards-row">
+               <span>${homeCardText}</span>
+               <span style="text-align:right">${awayCardText}</span>
+             </div>` : "";
+
+        // Live point impact per staff pick
+        const result     = calculateMatchPoints(match);
+        const homeStaff  = getStaffForCountry(match.homeTeam.name);
+        const awayStaff  = getStaffForCountry(match.awayTeam.name);
+        const impactLines = [];
+        if (homeStaff.length > 0) {
+          const pts = result.homePoints;
+          impactLines.push(`<div class="impact-line">
+            <span class="impact-staff">${homeStaff.join(", ")}</span>
+            <span class="impact-pts ${pts > 0 ? "positive" : pts < 0 ? "negative" : "zero"}">${pts > 0 ? "+" : ""}${pts} pts</span>
+          </div>`);
+        }
+        if (awayStaff.length > 0) {
+          const pts = result.awayPoints;
+          impactLines.push(`<div class="impact-line">
+            <span class="impact-staff">${awayStaff.join(", ")}</span>
+            <span class="impact-pts ${pts > 0 ? "positive" : pts < 0 ? "negative" : "zero"}">${pts > 0 ? "+" : ""}${pts} pts</span>
+          </div>`);
+        }
+        const impactBlock = impactLines.length > 0
+          ? `<div class="match-point-impact">${impactLines.join("")}</div>` : "";
 
         return `
           <div class="match-card ${isLive ? "live" : ""}">
@@ -1515,7 +1702,9 @@
                 <span class="match-team-name">${match.awayTeam.name}</span>
               </div>
             </div>
-            ${staffLine}
+            ${scorersRow}
+            ${cardsRow}
+            ${impactBlock}
           </div>`;
       }).join("");
     }
@@ -1562,6 +1751,82 @@
                 ${match.awayTeam.name}
               </span>
             </div>
+          </div>`;
+      }).join("");
+    }
+
+    // ============================================================
+    // RENDER: POINT EVENTS FEED
+    // Shows all goals, cards, and own goals from today's matches
+    // that affect at least one staff member's score.
+    // ============================================================
+    function renderPointEvents() {
+      const container = document.getElementById("events-list");
+      const today = new Date();
+
+      // Gather all relevant events from today's matches
+      const feedItems = [];
+      for (const match of state.matches) {
+        if (!isSameDay(new Date(match.datetime), today)) continue;
+        if (match.status !== "live" && match.status !== "completed") continue;
+
+        for (const e of (match.events || [])) {
+          const isHome = e.team === "home";
+          const teamName = isHome ? match.homeTeam.name : match.awayTeam.name;
+          const staff    = getStaffForCountry(teamName);
+
+          let icon, delta, desc;
+          switch (e.type) {
+            case "goal":
+              icon  = "⚽";
+              delta = +4;
+              desc  = `${e.player || "?"} (${match.homeTeam.code} vs ${match.awayTeam.code} ${e.minute}')`;
+              break;
+            case "own_goal":
+              icon  = "↩️";
+              delta = -1;
+              desc  = `${e.player || "?"} OG (${e.minute}')`;
+              break;
+            case "yellow_card":
+              icon  = "🟨";
+              delta = -1;
+              desc  = `${e.player || "?"} (${teamName} ${e.minute}')`;
+              break;
+            case "red_card":
+              icon  = "🟥";
+              delta = -3;
+              desc  = `${e.player || "?"} (${teamName} ${e.minute}')`;
+              break;
+            default: continue;
+          }
+
+          feedItems.push({ icon, delta, desc, staff, minute: e.minute || 0 });
+        }
+      }
+
+      if (feedItems.length === 0) {
+        container.innerHTML = `
+          <div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px;">
+            No events yet today
+          </div>`;
+        return;
+      }
+
+      // Sort most recent first, show last 8
+      feedItems.sort((a, b) => b.minute - a.minute);
+      const display = feedItems.slice(0, 8);
+
+      container.innerHTML = display.map(item => {
+        const deltaClass = item.delta > 0 ? "positive" : "negative";
+        const deltaStr   = (item.delta > 0 ? "+" : "") + item.delta;
+        const staffStr   = item.staff.length > 0
+          ? `<span class="event-staff">${item.staff.join(", ")}</span>`
+          : `<span style="color:var(--text-muted)">no staff</span>`;
+        return `
+          <div class="event-row">
+            <span class="event-icon">${item.icon}</span>
+            <span class="event-desc">${item.desc} — ${staffStr}</span>
+            <span class="event-delta ${deltaClass}">${deltaStr}</span>
           </div>`;
       }).join("");
     }
@@ -1615,6 +1880,7 @@
       renderLeaderboard();
       renderMatches();
       renderResults();
+      renderPointEvents();
       renderCountryGrid();
 
       // Update "last updated" timestamp
@@ -1633,6 +1899,17 @@
       await loadData();
       renderAll();
     }
+
+    // ============================================================
+    // RESPONSIVE SCALING
+    // Scales the fixed 1920x1080 dashboard to fit any screen size.
+    // ============================================================
+    function scaleDashboard() {
+      const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+      document.getElementById("dashboard").style.transform = `scale(${scale})`;
+    }
+    window.addEventListener("resize", scaleDashboard);
+    scaleDashboard();
 
     // ============================================================
     // BOOT
