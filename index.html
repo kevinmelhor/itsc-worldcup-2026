@@ -394,7 +394,7 @@
 
     .row-bar-track {
       height: 3px;
-      background: rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.12);
       border-radius: 2px;
       overflow: hidden;
     }
@@ -1387,8 +1387,13 @@
         const todayBadge = entry.hasMatchToday && !entry.isLive
           ? `<span class="row-plays-today">⚽ TODAY</span>` : "";
 
+        const groupChip = entry.group && entry.group !== "?"
+          ? `<span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:0 5px;color:var(--text-secondary);font-weight:600">GRP ${entry.group}</span>`
+          : "";
+
         const record = entry.played > 0
-          ? `<span class="row-record">
+          ? `${groupChip}
+             <span class="row-record">
                <span class="row-record-item w">W${entry.wins}</span>
                <span class="row-record-item d">D${entry.draws}</span>
                <span class="row-record-item l">L${entry.losses}</span>
@@ -1396,7 +1401,9 @@
              <span style="color:var(--text-muted)">·</span>
              <span>⚽ ${entry.goalsFor}</span>
              ${todayBadge}`
-          : `<span style="font-size:10px;color:var(--text-muted)">No matches played</span>${todayBadge}`;
+          : `${groupChip}
+             <span style="color:var(--text-muted)">0 matches played</span>
+             ${todayBadge}`;
 
         const todayLine = change !== 0
           ? `<div class="row-today ${changeClass(change)}">${change > 0 ? "+" : ""}${change} today</div>`
