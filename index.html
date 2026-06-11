@@ -290,8 +290,8 @@
 
     .leaderboard-row {
       display: grid;
-      /* Rank | Flag+Name+Country | Points | Today */
-      grid-template-columns: 52px 1fr 160px 150px;
+      /* Rank | Identity | Bar+Stats | Points */
+      grid-template-columns: 44px 210px 1fr 120px;
       align-items: center;
       padding: 0 16px;
       height: 32px;
@@ -307,12 +307,10 @@
       background: rgba(255,255,255,0.015);
     }
 
-    /* Highlight live rows */
     .leaderboard-row.is-live {
       background: rgba(0, 230, 118, 0.05);
     }
 
-    /* Top 3 get a special left border */
     .leaderboard-row.rank-1 { border-left: 3px solid var(--gold); }
     .leaderboard-row.rank-2 { border-left: 3px solid #c0c0c0; }
     .leaderboard-row.rank-3 { border-left: 3px solid #cd7f32; }
@@ -331,8 +329,9 @@
     .row-identity {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       min-width: 0;
+      overflow: hidden;
     }
 
     .row-flag {
@@ -356,7 +355,7 @@
     }
 
     .row-name {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
       color: var(--text-primary);
       white-space: nowrap;
@@ -365,7 +364,7 @@
     }
 
     .row-country {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--text-secondary);
       font-weight: 400;
       white-space: nowrap;
@@ -378,25 +377,90 @@
       font-size: 8px;
       font-weight: 800;
       letter-spacing: 0.8px;
-      padding: 1px 5px;
+      padding: 1px 4px;
       border-radius: 3px;
-      margin-left: 6px;
+      margin-left: 5px;
       vertical-align: middle;
     }
 
+    /* ── Progress bar + stats section ── */
+    .row-bar-section {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 3px;
+      padding: 0 14px;
+    }
+
+    .row-bar-track {
+      height: 3px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .row-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.6s ease;
+      min-width: 2px;
+    }
+
+    .row-bar-fill.rank-1     { background: var(--gold); }
+    .row-bar-fill.rank-2     { background: #c0c0c0; }
+    .row-bar-fill.rank-3     { background: #cd7f32; }
+    .row-bar-fill.rank-other { background: var(--scarlet); }
+
+    .row-stats-line {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 10px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .row-record { display: flex; gap: 5px; }
+    .row-record-item { font-weight: 700; }
+    .row-record-item.w { color: var(--positive); }
+    .row-record-item.d { color: var(--gold-dim); }
+    .row-record-item.l { color: var(--negative); }
+
+    .row-plays-today {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      background: rgba(255,215,0,0.10);
+      border: 1px solid rgba(255,215,0,0.22);
+      color: var(--gold);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      padding: 0px 5px;
+      border-radius: 3px;
+    }
+
+    /* ── Points section ── */
+    .row-points-section {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 1px;
+    }
+
     .row-points {
-      text-align: right;
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 800;
       color: var(--text-primary);
       font-variant-numeric: tabular-nums;
       letter-spacing: -0.5px;
+      line-height: 1;
     }
 
     .row-today {
-      text-align: right;
-      font-size: 13px;
-      font-weight: 700;
+      font-size: 10px;
+      font-weight: 600;
       font-variant-numeric: tabular-nums;
     }
 
@@ -1112,34 +1176,76 @@
 
     function calculateCountryPoints(matches) {
       const cp = {};
+
+      function init(name) {
+        if (!cp[name]) cp[name] = { points: 0, isLive: false, wins: 0, draws: 0, losses: 0, played: 0, goalsFor: 0 };
+      }
+
       for (const m of matches) {
         if (m.status !== "completed" && m.status !== "live") continue;
         if (!m.homeTeam.name || !m.awayTeam.name) continue;
-        if (!cp[m.homeTeam.name]) cp[m.homeTeam.name] = { points: 0, isLive: false };
-        if (!cp[m.awayTeam.name]) cp[m.awayTeam.name] = { points: 0, isLive: false };
+
+        init(m.homeTeam.name);
+        init(m.awayTeam.name);
+
         const result = calculateMatchPoints(m);
         cp[m.homeTeam.name].points += result.homePoints;
         cp[m.awayTeam.name].points += result.awayPoints;
+
         if (m.status === "live") {
           cp[m.homeTeam.name].isLive = true;
           cp[m.awayTeam.name].isLive = true;
+        }
+
+        if (m.status === "completed") {
+          const hs = m.homeScore || 0;
+          const as = m.awayScore || 0;
+          cp[m.homeTeam.name].played++;
+          cp[m.awayTeam.name].played++;
+          cp[m.homeTeam.name].goalsFor += hs;
+          cp[m.awayTeam.name].goalsFor += as;
+          if (hs > as) {
+            cp[m.homeTeam.name].wins++;
+            cp[m.awayTeam.name].losses++;
+          } else if (as > hs) {
+            cp[m.awayTeam.name].wins++;
+            cp[m.homeTeam.name].losses++;
+          } else {
+            cp[m.homeTeam.name].draws++;
+            cp[m.awayTeam.name].draws++;
+          }
         }
       }
       return cp;
     }
 
     function buildLeaderboard(staffPicks, countryPoints) {
+      const today = new Date();
+
       const entries = staffPicks.map(pick => {
-        const cp    = countryPoints[pick.country] || { points: 0, isLive: false };
+        const cp    = countryPoints[pick.country] || { points: 0, isLive: false, wins: 0, draws: 0, losses: 0, played: 0, goalsFor: 0 };
         const group = state.groupInfo[pick.country] || pick.group || "?";
+
+        const hasMatchToday = cp.isLive || state.matches.some(m =>
+          m.status === "scheduled" &&
+          isSameDay(new Date(m.datetime), today) &&
+          (m.homeTeam.name === pick.country || m.awayTeam.name === pick.country)
+        );
+
         return {
-          name:        pick.name,
-          country:     pick.country,
-          countryCode: pick.countryCode,
+          name:          pick.name,
+          country:       pick.country,
+          countryCode:   pick.countryCode,
           group,
-          points:      cp.points,
-          todayPoints: cp.points,
-          isLive:      cp.isLive,
+          points:        cp.points,
+          todayPoints:   cp.points,
+          isLive:        cp.isLive,
+          wins:          cp.wins   || 0,
+          draws:         cp.draws  || 0,
+          losses:        cp.losses || 0,
+          played:        cp.played || 0,
+          goalsFor:      cp.goalsFor || 0,
+          hasMatchToday,
         };
       });
 
@@ -1258,34 +1364,64 @@
     // RENDER: LEADERBOARD
     // ============================================================
     function renderLeaderboard() {
-      const list = document.getElementById("leaderboard-list");
+      const list    = document.getElementById("leaderboard-list");
       const entries = state.leaderboard;
 
       document.getElementById("leaderboard-count").textContent =
         `${entries.length} participants`;
 
-      list.innerHTML = entries.map((entry) => {
-        const rankClass = entry.rank <= 3 ? `rank-${entry.rank}` : "";
-        const liveClass = entry.isLive ? "is-live" : "";
-        const liveBadge = entry.isLive
-          ? `<span class="row-live-badge">LIVE</span>` : "";
-        const change    = entry.todayPoints || 0;
+      const maxPoints = Math.max(...entries.map(e => e.points), 1);
 
+      list.innerHTML = entries.map((entry) => {
+        const rankClass  = entry.rank <= 3 ? `rank-${entry.rank}` : "";
+        const liveClass  = entry.isLive ? "is-live" : "";
+        const liveBadge  = entry.isLive
+          ? `<span class="row-live-badge">LIVE</span>` : "";
+        const change     = entry.todayPoints || 0;
         const groupLabel = entry.group && entry.group !== "?"
-          ? ` &middot; Group ${entry.group}` : "";
+          ? ` · Grp ${entry.group}` : "";
+
+        const barPct   = Math.max(Math.round((entry.points / maxPoints) * 100), entry.points > 0 ? 2 : 0);
+        const barClass = entry.rank === 1 ? "rank-1" : entry.rank === 2 ? "rank-2" : entry.rank === 3 ? "rank-3" : "rank-other";
+
+        const todayBadge = entry.hasMatchToday && !entry.isLive
+          ? `<span class="row-plays-today">⚽ TODAY</span>` : "";
+
+        const record = entry.played > 0
+          ? `<span class="row-record">
+               <span class="row-record-item w">W${entry.wins}</span>
+               <span class="row-record-item d">D${entry.draws}</span>
+               <span class="row-record-item l">L${entry.losses}</span>
+             </span>
+             <span style="color:var(--text-muted)">·</span>
+             <span>⚽ ${entry.goalsFor}</span>
+             ${todayBadge}`
+          : `<span style="font-size:10px;color:var(--text-muted)">No matches played</span>${todayBadge}`;
+
+        const todayLine = change !== 0
+          ? `<div class="row-today ${changeClass(change)}">${change > 0 ? "+" : ""}${change} today</div>`
+          : `<div class="row-today zero">—</div>`;
 
         return `
           <div class="leaderboard-row ${rankClass} ${liveClass}">
             <div class="row-rank ${rankClass}">${entry.rank}</div>
             <div class="row-identity">
-              ${flagImg(entry.countryCode, 44, 33, "row-flag")}
+              ${flagImg(entry.countryCode, 30, 22, "row-flag")}
               <div class="row-name-group">
                 <div class="row-name">${entry.name}${liveBadge}</div>
                 <div class="row-country">${entry.country}${groupLabel}</div>
               </div>
             </div>
-            <div class="row-points">${entry.points} <span style="font-size:13px;font-weight:400;color:var(--text-muted)">pts</span></div>
-            <div class="row-today ${changeClass(change)}">${formatChange(change)} today</div>
+            <div class="row-bar-section">
+              <div class="row-bar-track">
+                <div class="row-bar-fill ${barClass}" style="width:${barPct}%"></div>
+              </div>
+              <div class="row-stats-line">${record}</div>
+            </div>
+            <div class="row-points-section">
+              <div class="row-points">${entry.points}<span style="font-size:11px;font-weight:400;color:var(--text-muted);margin-left:2px">pts</span></div>
+              ${todayLine}
+            </div>
           </div>`;
       }).join("");
     }
