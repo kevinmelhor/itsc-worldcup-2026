@@ -856,26 +856,31 @@
     .flash-negative { animation: point-flash-neg 1.2s ease forwards; }
 
     /* ── Enhanced match card ── */
-    .match-scorers {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 4px;
+    .match-details {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0 8px;
+      margin-top: 5px;
       font-size: 10px;
+    }
+
+    .match-detail-home {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
       color: var(--text-secondary);
-      min-height: 13px;
     }
 
-    .match-scorers-home { text-align: left; flex: 1; }
-    .match-scorers-away { text-align: right; flex: 1; }
-
-    .match-cards-row {
+    .match-detail-away {
       display: flex;
-      justify-content: space-between;
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-top: 2px;
-      min-height: 13px;
+      flex-direction: column;
+      gap: 2px;
+      align-items: flex-end;
+      text-align: right;
+      color: var(--text-secondary);
     }
+
+    .match-detail-center { /* spacer */ }
 
     .match-point-impact {
       margin-top: 5px;
@@ -1658,36 +1663,35 @@
           ? `GROUP ${match.group} &middot; MD${match.matchday}`
           : `MD${match.matchday}`;
 
-        // Goal scorers
-        const homeGoals = (match.events || []).filter(e => e.type === "goal" && e.team === "home");
-        const awayGoals = (match.events || []).filter(e => e.type === "goal" && e.team === "away");
-        const homeOG    = (match.events || []).filter(e => e.type === "own_goal" && e.team === "away"); // OG by away = goal for home
-        const awayOG    = (match.events || []).filter(e => e.type === "own_goal" && e.team === "home");
-        const homeScorerText = [...homeGoals.map(e => `⚽ ${e.player} ${e.minute}'`), ...homeOG.map(e => `↩️ ${e.player} ${e.minute}'`)].join("  ");
-        const awayScorerText = [...awayGoals.map(e => `⚽ ${e.player} ${e.minute}'`), ...awayOG.map(e => `↩️ ${e.player} ${e.minute}'`)].join("  ");
-        const scorersRow = (homeScorerText || awayScorerText)
-          ? `<div class="match-scorers">
-               <span class="match-scorers-home">${homeScorerText}</span>
-               <span class="match-scorers-away">${awayScorerText}</span>
-             </div>` : "";
+        // Build per-team event lines (goals + cards), sorted by minute
+        const evts = match.events || [];
+        const homeLines = evts
+          .filter(e => e.team === "home")
+          .sort((a, b) => a.minute - b.minute)
+          .map(e => {
+            if (e.type === "goal")        return `⚽ ${e.player} ${e.minute}'`;
+            if (e.type === "own_goal")    return `↩️ ${e.player} ${e.minute}'`;
+            if (e.type === "yellow_card") return `🟨 ${e.player} ${e.minute}'`;
+            if (e.type === "red_card")    return `🟥 ${e.player} ${e.minute}'`;
+            return null;
+          }).filter(Boolean);
 
-        // Cards in this match
-        const homeYellow = (match.events || []).filter(e => e.type === "yellow_card" && e.team === "home");
-        const awayYellow = (match.events || []).filter(e => e.type === "yellow_card" && e.team === "away");
-        const homeRed    = (match.events || []).filter(e => e.type === "red_card"    && e.team === "home");
-        const awayRed    = (match.events || []).filter(e => e.type === "red_card"    && e.team === "away");
-        const homeCardText = [
-          ...homeYellow.map(e => `🟨 ${e.player} ${e.minute}'`),
-          ...homeRed.map(e    => `🟥 ${e.player} ${e.minute}'`),
-        ].join("  ");
-        const awayCardText = [
-          ...awayYellow.map(e => `🟨 ${e.player} ${e.minute}'`),
-          ...awayRed.map(e    => `🟥 ${e.player} ${e.minute}'`),
-        ].join("  ");
-        const cardsRow = (homeCardText || awayCardText)
-          ? `<div class="match-cards-row">
-               <span>${homeCardText}</span>
-               <span style="text-align:right">${awayCardText}</span>
+        const awayLines = evts
+          .filter(e => e.team === "away")
+          .sort((a, b) => a.minute - b.minute)
+          .map(e => {
+            if (e.type === "goal")        return `⚽ ${e.player} ${e.minute}'`;
+            if (e.type === "own_goal")    return `↩️ ${e.player} ${e.minute}'`;
+            if (e.type === "yellow_card") return `🟨 ${e.player} ${e.minute}'`;
+            if (e.type === "red_card")    return `🟥 ${e.player} ${e.minute}'`;
+            return null;
+          }).filter(Boolean);
+
+        const detailsRow = (homeLines.length || awayLines.length)
+          ? `<div class="match-details">
+               <div class="match-detail-home">${homeLines.map(l => `<div>${l}</div>`).join("")}</div>
+               <div class="match-detail-center"></div>
+               <div class="match-detail-away">${awayLines.map(l => `<div>${l}</div>`).join("")}</div>
              </div>` : "";
 
         // Live point impact per staff pick
@@ -1729,8 +1733,7 @@
                 <span class="match-team-name">${match.awayTeam.name}</span>
               </div>
             </div>
-            ${scorersRow}
-            ${cardsRow}
+            ${detailsRow}
             ${impactBlock}
           </div>`;
       }).join("");
