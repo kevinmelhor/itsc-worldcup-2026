@@ -63,7 +63,7 @@
     }
 
     html, body {
-      width: 100vw;
+      width: 100%;
       height: 100vh;
       overflow: hidden;
       background: var(--bg-base);
@@ -72,9 +72,6 @@
       font-size: 16px;
       line-height: 1.4;
       -webkit-font-smoothing: antialiased;
-      display: flex;
-      align-items: flex-start;
-      justify-content: flex-start;
     }
 
     /* ============================================================
@@ -83,16 +80,15 @@
     ============================================================ */
     #dashboard {
       display: grid;
-      grid-template-rows: 76px 1fr 95px;
-      transform-origin: top left;
+      grid-template-rows: 7vh 1fr 9vh;
       grid-template-areas:
         "header"
         "main"
         "statusbar";
-      height: 1080px;
-      width: 1920px;
-      padding: 12px 20px 14px;
-      gap: 10px;
+      height: 100vh;
+      width: 100%;
+      padding: 1vh 1vw;
+      gap: 1vh;
       background:
         radial-gradient(ellipse 800px 400px at 0% 0%, rgba(200, 16, 46, 0.06) 0%, transparent 70%),
         radial-gradient(ellipse 600px 400px at 100% 100%, rgba(255, 215, 0, 0.03) 0%, transparent 70%);
@@ -284,12 +280,17 @@
 
     #leaderboard-scroll {
       flex: 1;
-      overflow: visible;
+      overflow: hidden;
       position: relative;
+      display: flex;
+      flex-direction: column;
     }
 
     #leaderboard-list {
       width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
 
     .leaderboard-row {
@@ -298,7 +299,8 @@
       grid-template-columns: 44px 1fr 200px 120px;
       align-items: center;
       padding: 0 16px;
-      height: 35px;
+      flex: 1;
+      min-height: 0;
       border-bottom: 1px solid var(--border);
       transition: background 0.2s ease;
     }
@@ -1929,17 +1931,6 @@
       await loadData();
       renderAll();
     }
-
-    // ============================================================
-    // RESPONSIVE SCALING
-    // Scales the fixed 1920x1080 dashboard to fit any screen size.
-    // ============================================================
-    function scaleDashboard() {
-      const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-      document.getElementById("dashboard").style.transform = `scale(${scale})`;
-    }
-    window.addEventListener("resize", scaleDashboard);
-    scaleDashboard();
 
     // ============================================================
     // BOOT
