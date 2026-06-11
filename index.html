@@ -880,43 +880,72 @@
     /**
      * ITSC World Cup 2026 Dashboard
      *
-     * Toggle USE_MOCK_DATA to switch between mock and live data.
-     * Set your API key when going live.
+     * Live mode: pulls match data from the BALLDONTLIE API and calculates
+     * points directly in the browser. No Apps Script needed for display.
+     * Toggle USE_MOCK_DATA to fall back to data.js for testing.
      */
 
-    // Live mode: pulling real data from the BALLDONTLIE API.
     const USE_MOCK_DATA = false;
     const API_KEY       = "b29f8214-03a4-4d75-8d1b-e2f2f46e40a3";
-    const API_BASE      = "https://fifa.balldontlie.io";
+    const API_BASE      = "https://api.balldontlie.io";
 
-    // How often to poll for new data (milliseconds)
-    const REFRESH_INTERVAL_MS = 60 * 1000;
+    const REFRESH_INTERVAL_MS  = 60 * 1000;
+    const LIVE_TICK_INTERVAL_MS = 15000; // Mock mode demo only
 
-    // How fast the live match clock ticks for demo purposes (ms per minute)
-    // Set to 60000 in production (real time). Set lower to see it move in demo.
-    const LIVE_TICK_INTERVAL_MS = 15000;
+    // ============================================================
+    // FIFA COUNTRY CODE TO FLAG CODE MAPPING
+    // Maps the API's 3-letter FIFA codes to 2-letter ISO codes
+    // used by flagcdn.com for flag images.
+    // ============================================================
+    const FIFA_FLAG_CODES = {
+      ALG: "dz", ARG: "ar", AUS: "au", AUT: "at", BEL: "be",
+      BIH: "ba", BRA: "br", CPV: "cv", CAN: "ca", COL: "co",
+      CIV: "ci", CRO: "hr", CUW: "cw", CZE: "cz", COD: "cd",
+      ECU: "ec", EGY: "eg", ENG: "gb-eng", FRA: "fr", GER: "de",
+      GHA: "gh", HAI: "ht", IRN: "ir", IRQ: "iq", JPN: "jp",
+      JOR: "jo", MEX: "mx", MAR: "ma", NED: "nl", NZL: "nz",
+      NOR: "no", PAN: "pa", PAR: "py", POR: "pt", QAT: "qa",
+      KSA: "sa", SCO: "gb-sct", SEN: "sn", RSA: "za", KOR: "kr",
+      ESP: "es", SWE: "se", SUI: "ch", TUN: "tn", TUR: "tr",
+      URU: "uy", USA: "us", UZB: "uz",
+    };
+
+    function getFlagCode(countryCode) {
+      return FIFA_FLAG_CODES[countryCode] || countryCode.toLowerCase().slice(0, 2);
+    }
+
+    // ============================================================
+    // POINT VALUES (mirrors PointCalculator.gs)
+    // ============================================================
+    const POINTS = {
+      GOAL: 4, OWN_GOAL: -1, YELLOW_CARD: -1, RED_CARD: -3,
+      CLEAN_SHEET: 2, WIN: 3, DRAW: 1,
+      ADVANCE_R16: 5, ADVANCE_QF: 10, ADVANCE_SF: 20,
+      ADVANCE_FINAL: 35, WIN_FINAL: 50,
+    };
 
     // ============================================================
     // STATE
     // All app state lives here in memory. No localStorage used.
     // ============================================================
+    // STATE
+    // ============================================================
     const state = {
-      leaderboard:    [],
-      matches:        [],
-      countryPoints:  {},
-      staffPicks:     [],
-      liveMinute:     67,       // Mocked live match minute
-      scrollOffset:   0,        // Current leaderboard scroll position in rows
-      scrollDir:      1,        // 1 = down, -1 = up
-      scrollPaused:   false,    // Pause scrolling at top/bottom
-      lastUpdated:    new Date(),
+      leaderboard:   [],
+      matches:       [],
+      countryPoints: {},
+      staffPicks:    [],
+      groupInfo:     {},  // country name -> group letter (e.g. "A")
+      liveMinute:    67,  // Mock mode only
+      scrollOffset:  0,
+      scrollDir:     1,
+      lastUpdated:   new Date(),
     };
 
     // ============================================================
     // UTILITIES
     // ============================================================
 
-    // Format a Date object as "HH:MM AM/PM"
     function formatTime(date) {
       let h = date.getHours();
       const m = String(date.getMinutes()).padStart(2, "0");
@@ -925,51 +954,47 @@
       return `${h}:${m} ${ampm}`;
     }
 
-    // Format a Date object as "Wednesday, June 14, 2026"
     function formatDate(date) {
       return date.toLocaleDateString("en-US", {
-        weekday: "long",
-        year:    "numeric",
-        month:   "long",
-        day:     "numeric",
+        weekday: "long", year: "numeric", month: "long", day: "numeric",
       });
     }
 
-    // Format a UTC ISO datetime as local kickoff time string ("3:00 PM")
     function formatKickoff(isoString) {
-      const d = new Date(isoString);
-      return formatTime(d);
+      return formatTime(new Date(isoString));
     }
 
-    // Return a flag <img> element string for a given flagCode
     function flagImg(flagCode, w = 32, h = 24, cssClass = "") {
       const src = `https://flagcdn.com/${w}x${h}/${flagCode}.png`;
       return `<img src="${src}" width="${w}" height="${h}" class="${cssClass}"
-                   onerror="this.style.visibility='hidden'"
-                   alt="" loading="lazy">`;
+                   onerror="this.style.visibility='hidden'" alt="" loading="lazy">`;
     }
 
-    // Return "+N" or "-N" formatted today-change string
     function formatChange(n) {
       if (n > 0) return `+${n}`;
       if (n < 0) return `${n}`;
       return "0";
     }
 
-    // Returns "positive", "negative", or "zero" for CSS class
     function changeClass(n) {
       if (n > 0) return "positive";
       if (n < 0) return "negative";
       return "zero";
     }
 
+    // Returns true if two Date objects fall on the same calendar day (local time)
+    function isSameDay(a, b) {
+      return a.getFullYear() === b.getFullYear() &&
+             a.getMonth()    === b.getMonth()    &&
+             a.getDate()     === b.getDate();
+    }
+
     // ============================================================
     // CLOCK
-    // Updates the header clock every second.
     // ============================================================
     function startClock() {
       function tick() {
-        const now  = new Date();
+        const now = new Date();
         document.getElementById("current-time").textContent = formatTime(now);
         document.getElementById("current-date").textContent = formatDate(now);
         document.getElementById("tournament-day").textContent = getTournamentDay();
@@ -979,24 +1004,217 @@
     }
 
     // ============================================================
-    // LIVE MATCH MINUTE TICKER
-    // Increments the live match clock in mock mode for demo effect.
+    // LIVE MATCH MINUTE TICKER (mock mode demo only)
     // ============================================================
     function startLiveTicker() {
-      setInterval(() => {
-        state.liveMinute++;
-        // Refresh the match display so the live minute updates
-        renderMatches();
-      }, LIVE_TICK_INTERVAL_MS);
+      if (USE_MOCK_DATA) {
+        setInterval(() => { state.liveMinute++; renderMatches(); }, LIVE_TICK_INTERVAL_MS);
+      }
+    }
+
+    // ============================================================
+    // API NORMALIZATION HELPERS
+    // ============================================================
+
+    // Returns true if the API status string means the match is in progress
+    function isLiveStatus(s) {
+      if (!s) return false;
+      const l = s.toLowerCase();
+      return l === "in_progress" || l === "live" || l === "1h" ||
+             l === "ht" || l === "2h" || l === "et" || l === "pen" ||
+             /^\d+$/.test(l);
+    }
+
+    // Returns true if the API status string means the match is finished
+    function isCompletedStatus(s) {
+      if (!s) return false;
+      const l = s.toLowerCase();
+      return l === "completed" || l === "final" || l === "ft" ||
+             l === "finished" || l === "aet" || l === "ap";
+    }
+
+    // Converts an API match object into our internal match format
+    function normalizeMatch(m) {
+      let status = "scheduled";
+      if (isLiveStatus(m.status))      status = "live";
+      if (isCompletedStatus(m.status)) status = "completed";
+
+      const homeCode   = m.home_team?.country_code || "";
+      const awayCode   = m.away_team?.country_code || "";
+      const groupLetter = (m.group?.name || "").replace("Group ", "").trim();
+
+      return {
+        id:        m.id,
+        group:     groupLetter,
+        matchday:  m.round_number || 1,
+        status,
+        rawStatus: m.status,
+        datetime:  m.datetime,
+        venue:     m.stadium?.name || "",
+        homeTeam: {
+          id:       m.home_team?.id,
+          name:     m.home_team?.name || "",
+          code:     m.home_team?.abbreviation || homeCode,
+          flagCode: getFlagCode(homeCode),
+        },
+        awayTeam: {
+          id:       m.away_team?.id,
+          name:     m.away_team?.name || "",
+          code:     m.away_team?.abbreviation || awayCode,
+          flagCode: getFlagCode(awayCode),
+        },
+        homeScore: m.home_score,
+        awayScore: m.away_score,
+        events:    [],
+      };
+    }
+
+    // Converts an API event into our internal event format
+    function normalizeEvent(e, match) {
+      // Identify home vs away by matching team id
+      const side = (e.team?.id && match.awayTeam.id && e.team.id === match.awayTeam.id)
+        ? "away" : "home";
+      return {
+        type:   (e.type || "").toLowerCase().replace(/\s+/g, "_"),
+        team:   side,
+        player: e.player?.name || "",
+        minute: e.minute || 0,
+      };
+    }
+
+    // ============================================================
+    // POINT CALCULATION (runs in the browser from API data)
+    // ============================================================
+
+    function getEventPoints(type) {
+      switch (type) {
+        case "goal":        return POINTS.GOAL;
+        case "own_goal":    return POINTS.OWN_GOAL;
+        case "yellow_card": return POINTS.YELLOW_CARD;
+        case "red_card":    return POINTS.RED_CARD;
+        default:            return null;
+      }
+    }
+
+    function calculateMatchPoints(match) {
+      let hp = 0, ap = 0;
+      for (const e of (match.events || [])) {
+        const pts = getEventPoints(e.type);
+        if (pts === null) continue;
+        if (e.team === "home") hp += pts;
+        else                   ap += pts;
+      }
+      const hs = match.homeScore || 0;
+      const as = match.awayScore || 0;
+      if (hs > as)      { hp += POINTS.WIN; }
+      else if (as > hs) { ap += POINTS.WIN; }
+      else              { hp += POINTS.DRAW; ap += POINTS.DRAW; }
+      if (as === 0) hp += POINTS.CLEAN_SHEET;
+      if (hs === 0) ap += POINTS.CLEAN_SHEET;
+      return { homePoints: hp, awayPoints: ap };
+    }
+
+    function calculateCountryPoints(matches) {
+      const cp = {};
+      for (const m of matches) {
+        if (m.status !== "completed" && m.status !== "live") continue;
+        if (!m.homeTeam.name || !m.awayTeam.name) continue;
+        if (!cp[m.homeTeam.name]) cp[m.homeTeam.name] = { points: 0, isLive: false };
+        if (!cp[m.awayTeam.name]) cp[m.awayTeam.name] = { points: 0, isLive: false };
+        const result = calculateMatchPoints(m);
+        cp[m.homeTeam.name].points += result.homePoints;
+        cp[m.awayTeam.name].points += result.awayPoints;
+        if (m.status === "live") {
+          cp[m.homeTeam.name].isLive = true;
+          cp[m.awayTeam.name].isLive = true;
+        }
+      }
+      return cp;
+    }
+
+    function buildLeaderboard(staffPicks, countryPoints) {
+      const entries = staffPicks.map(pick => {
+        const cp    = countryPoints[pick.country] || { points: 0, isLive: false };
+        const group = state.groupInfo[pick.country] || pick.group || "?";
+        return {
+          name:        pick.name,
+          country:     pick.country,
+          countryCode: pick.countryCode,
+          group,
+          points:      cp.points,
+          todayPoints: cp.points,
+          isLive:      cp.isLive,
+        };
+      });
+
+      entries.sort((a, b) => b.points !== a.points
+        ? b.points - a.points
+        : a.name.localeCompare(b.name));
+
+      let rank = 1;
+      entries.forEach((e, i) => {
+        if (i > 0 && e.points < entries[i - 1].points) rank = i + 1;
+        e.rank = rank;
+      });
+
+      return entries;
+    }
+
+    // ============================================================
+    // API FETCH HELPERS
+    // ============================================================
+
+    // Fetches all matches using cursor-based pagination
+    async function fetchAllMatchesFromAPI(headers) {
+      const all = [];
+      let cursor = null;
+      do {
+        const url = `${API_BASE}/fifa/worldcup/v1/matches?per_page=100` +
+                    (cursor ? `&cursor=${cursor}` : "");
+        const res  = await fetch(url, { headers });
+        const data = await res.json();
+        all.push(...(data.data || []));
+        cursor = data.meta?.next_cursor || null;
+      } while (cursor);
+      return all;
+    }
+
+    // Fetches events for a list of match IDs, returns a map of matchId -> events[]
+    async function fetchMatchEventsFromAPI(matchIds, headers) {
+      const eventsMap = {};
+      if (!matchIds.length) return eventsMap;
+      // Batch in chunks of 20 to avoid very long URLs
+      for (let i = 0; i < matchIds.length; i += 20) {
+        const chunk = matchIds.slice(i, i + 20);
+        const qs    = chunk.map(id => `match_ids[]=${id}`).join("&");
+        const res   = await fetch(`${API_BASE}/fifa/worldcup/v1/match_events?${qs}`, { headers });
+        const data  = await res.json();
+        for (const e of (data.data || [])) {
+          if (!eventsMap[e.match_id]) eventsMap[e.match_id] = [];
+          eventsMap[e.match_id].push(e);
+        }
+      }
+      return eventsMap;
+    }
+
+    // Fetches group standings to get group letter per country
+    async function fetchGroupInfoFromAPI(headers) {
+      const res  = await fetch(`${API_BASE}/fifa/worldcup/v1/group_standings`, { headers });
+      const data = await res.json();
+      const info = {};
+      for (const row of (data.data || [])) {
+        const name  = row.team?.name;
+        const group = (row.group?.name || "").replace("Group ", "").trim();
+        if (name) info[name] = group;
+      }
+      return info;
     }
 
     // ============================================================
     // DATA LOADING
-    // Loads mock or real data into state.
     // ============================================================
     async function loadData() {
       if (USE_MOCK_DATA) {
-        // Use mock data from mock-data.js
         state.leaderboard   = MOCK_LEADERBOARD;
         state.matches       = MOCK_MATCHES;
         state.countryPoints = MOCK_COUNTRY_POINTS;
@@ -1004,23 +1222,35 @@
         return;
       }
 
-      // --------------------------------------------------------
-      // REAL API CALLS
-      // Uncomment and complete these when going live.
-      // --------------------------------------------------------
       try {
         const headers = { "Authorization": `Bearer ${API_KEY}` };
 
-        // Fetch all games (add date filter for efficiency)
-        const gamesRes  = await fetch(`${API_BASE}/fifa/worldcup/v1/games`, { headers });
-        const gamesData = await gamesRes.json();
-        state.matches = gamesData.data || [];
+        // Group info (for leaderboard group labels)
+        state.groupInfo = await fetchGroupInfoFromAPI(headers);
 
-        // The leaderboard comes from the Apps Script output tab in Google Sheets.
-        // Fetch it from a published Google Sheet URL (see docs/SETUP.md).
-        // const lbRes  = await fetch("YOUR_PUBLISHED_SHEET_URL");
-        // const lbData = await lbRes.json();
-        // state.leaderboard = lbData;
+        // All matches, normalized to internal format
+        const rawMatches = await fetchAllMatchesFromAPI(headers);
+        state.matches = rawMatches.map(normalizeMatch);
+
+        // Events for completed and live matches only
+        const activeIds = state.matches
+          .filter(m => m.status === "completed" || m.status === "live")
+          .map(m => m.id);
+        const eventsMap = await fetchMatchEventsFromAPI(activeIds, headers);
+
+        // Attach normalized events to each match
+        state.matches.forEach(m => {
+          m.events = (eventsMap[m.id] || []).map(e => normalizeEvent(e, m));
+        });
+
+        // Calculate country points from match results and events
+        state.countryPoints = calculateCountryPoints(state.matches);
+
+        // Staff picks come from data.js (real staff data)
+        state.staffPicks = MOCK_STAFF_PICKS;
+
+        // Build the leaderboard
+        state.leaderboard = buildLeaderboard(MOCK_STAFF_PICKS, state.countryPoints);
 
       } catch (err) {
         console.error("API fetch failed:", err);
@@ -1045,6 +1275,9 @@
           ? `<span class="row-live-badge">LIVE</span>` : "";
         const change    = entry.todayPoints || 0;
 
+        const groupLabel = entry.group && entry.group !== "?"
+          ? ` &middot; Group ${entry.group}` : "";
+
         return `
           <div class="leaderboard-row ${rankClass} ${liveClass}">
             <div class="row-rank ${rankClass}">${entry.rank}</div>
@@ -1052,7 +1285,7 @@
               ${flagImg(entry.countryCode, 44, 33, "row-flag")}
               <div class="row-name-group">
                 <div class="row-name">${entry.name}${liveBadge}</div>
-                <div class="row-country">${entry.country} &middot; Group ${entry.group}</div>
+                <div class="row-country">${entry.country}${groupLabel}</div>
               </div>
             </div>
             <div class="row-points">${entry.points} <span style="font-size:13px;font-weight:400;color:var(--text-muted)">pts</span></div>
@@ -1110,20 +1343,22 @@
 
     // ============================================================
     // RENDER: TODAY'S MATCHES
-    // Shows live match first, then upcoming matches.
+    // Shows live matches first, then matches scheduled for today.
     // ============================================================
     function renderMatches() {
       const container = document.getElementById("matches-list");
+      const now = new Date();
 
-      // Identify today's matches: live + scheduled
-      const today = state.matches.filter(
-        (m) => m.status === "live" || m.status === "scheduled"
-      );
+      const todayMatches = state.matches.filter(m => {
+        if (m.status === "live") return true;
+        if (m.status === "scheduled") return isSameDay(new Date(m.datetime), now);
+        return false;
+      });
 
       document.getElementById("matches-subtitle").textContent =
-        `${today.length} match${today.length !== 1 ? "es" : ""}`;
+        `${todayMatches.length} match${todayMatches.length !== 1 ? "es" : ""}`;
 
-      if (today.length === 0) {
+      if (todayMatches.length === 0) {
         container.innerHTML = `
           <div style="padding:24px;text-align:center;color:var(--text-muted);font-size:14px;">
             No more matches today
@@ -1131,52 +1366,42 @@
         return;
       }
 
-      container.innerHTML = today.map((match) => {
-        const isLive  = match.status === "live";
-        const minute  = isLive ? state.liveMinute : null;
+      container.innerHTML = todayMatches.map((match) => {
+        const isLive = match.status === "live";
+        const minute = isLive && USE_MOCK_DATA ? state.liveMinute : null;
 
         const homeStaff = getStaffForCountry(match.homeTeam.name);
         const awayStaff = getStaffForCountry(match.awayTeam.name);
         const allStaff  = [
-          ...homeStaff.map((n) => `${n} (${match.homeTeam.code})`),
-          ...awayStaff.map((n) => `${n} (${match.awayTeam.code})`),
+          ...homeStaff.map(n => `${n} (${match.homeTeam.code})`),
+          ...awayStaff.map(n => `${n} (${match.awayTeam.code})`),
         ];
         const staffLine = allStaff.length > 0
           ? `<div class="match-staff-row">Staff: <span class="staff-in-match">${allStaff.join(", ")}</span></div>`
           : "";
 
-        let scoreBlock;
-        if (isLive) {
-          scoreBlock = `
-            <div class="match-score-block">
-              <div class="match-score">${match.homeScore}</div>
-              <div class="match-score-divider">:</div>
-              <div class="match-score">${match.awayScore}</div>
-            </div>`;
-        } else {
-          const kickoff = formatKickoff(match.datetime);
-          scoreBlock = `<div class="match-kickoff">${kickoff}</div>`;
-        }
+        const scoreBlock = isLive
+          ? `<div class="match-score-block">
+               <div class="match-score">${match.homeScore ?? 0}</div>
+               <div class="match-score-divider">:</div>
+               <div class="match-score">${match.awayScore ?? 0}</div>
+             </div>`
+          : `<div class="match-kickoff">${formatKickoff(match.datetime)}</div>`;
 
-        let statusBlock;
-        if (isLive) {
-          statusBlock = `
-            <div class="match-status-badge">
-              <div class="live-dot"></div>
-              <span class="live-text">LIVE ${minute}'</span>
-            </div>`;
-        } else {
-          statusBlock = `
-            <div class="match-status-badge">
-              <span class="upcoming-text">TODAY</span>
-            </div>`;
-        }
+        const liveLabel = minute ? `LIVE ${minute}'` : `LIVE`;
+        const statusBlock = isLive
+          ? `<div class="match-status-badge"><div class="live-dot"></div><span class="live-text">${liveLabel}</span></div>`
+          : `<div class="match-status-badge"><span class="upcoming-text">TODAY</span></div>`;
+
+        const groupLabel = match.group
+          ? `GROUP ${match.group} &middot; MD${match.matchday}`
+          : `MD${match.matchday}`;
 
         return `
           <div class="match-card ${isLive ? "live" : ""}">
             <div class="match-meta">
               ${statusBlock}
-              <span class="match-group-label">GROUP ${match.group} &middot; MD${match.matchday}</span>
+              <span class="match-group-label">${groupLabel}</span>
             </div>
             <div class="match-teams">
               <div class="match-team home">
@@ -1202,9 +1427,9 @@
       const container = document.getElementById("results-list");
 
       const completed = state.matches
-        .filter((m) => m.status === "completed")
-        .slice(-5)  // Last 5 completed matches
-        .reverse(); // Most recent first
+        .filter(m => m.status === "completed")
+        .sort((a, b) => new Date(b.datetime) - new Date(a.datetime))
+        .slice(0, 5);
 
       if (completed.length === 0) {
         container.innerHTML = `
@@ -1258,11 +1483,12 @@
       grid.innerHTML = uniquePicks.map((pick) => {
         const cp = state.countryPoints[pick.country] || { points: 0, isLive: false };
 
-        // Determine if this country has an upcoming match today
-        const hasUpcoming = state.matches.some(
-          (m) =>
-            m.status === "scheduled" &&
-            (m.homeTeam.name === pick.country || m.awayTeam.name === pick.country)
+        // Determine if this country has a match scheduled for today
+        const today = new Date();
+        const hasUpcoming = state.matches.some(m =>
+          m.status === "scheduled" &&
+          isSameDay(new Date(m.datetime), today) &&
+          (m.homeTeam.name === pick.country || m.awayTeam.name === pick.country)
         );
 
         let dotClass = "none";
