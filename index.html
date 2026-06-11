@@ -1279,12 +1279,18 @@
 
     function calculateMatchPoints(match) {
       let hp = 0, ap = 0;
+
+      // Event-based points (goals, cards, own goals) counted as they happen
       for (const e of (match.events || [])) {
         const pts = getEventPoints(e.type);
         if (pts === null) continue;
         if (e.team === "home") hp += pts;
         else                   ap += pts;
       }
+
+      // Win/draw and clean sheet are always applied based on current score —
+      // during live play this reflects "points if the game ended right now",
+      // so there's no sudden jump when the match completes.
       const hs = match.homeScore || 0;
       const as = match.awayScore || 0;
       if (hs > as)      { hp += POINTS.WIN; }
@@ -1292,6 +1298,7 @@
       else              { hp += POINTS.DRAW; ap += POINTS.DRAW; }
       if (as === 0) hp += POINTS.CLEAN_SHEET;
       if (hs === 0) ap += POINTS.CLEAN_SHEET;
+
       return { homePoints: hp, awayPoints: ap };
     }
 
@@ -1431,6 +1438,7 @@
         const qs    = chunk.map(id => `match_ids[]=${id}`).join("&");
         const res   = await fetch(`${API_BASE}/fifa/worldcup/v1/match_events?${qs}`, { headers });
         const data  = await res.json();
+        console.log("[Events API] raw response:", JSON.stringify(data).slice(0, 500));
         for (const e of (data.data || [])) {
           if (!eventsMap[e.match_id]) eventsMap[e.match_id] = [];
           eventsMap[e.match_id].push(e);
