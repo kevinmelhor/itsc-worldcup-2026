@@ -291,7 +291,7 @@
     .leaderboard-row {
       display: grid;
       /* Rank | Identity | Bar+Stats | Points */
-      grid-template-columns: 44px 210px 1fr 120px;
+      grid-template-columns: 44px 1fr 200px 120px;
       align-items: center;
       padding: 0 16px;
       height: 32px;
@@ -329,7 +329,7 @@
     .row-identity {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       min-width: 0;
       overflow: hidden;
     }
@@ -350,24 +350,35 @@
       flex-shrink: 0;
     }
 
-    .row-name-group {
+    .row-name-line {
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
       min-width: 0;
+      overflow: hidden;
     }
 
     .row-name {
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 700;
       color: var(--text-primary);
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      flex-shrink: 0;
+    }
+
+    .row-name-sep {
+      color: var(--text-muted);
+      font-size: 12px;
+      flex-shrink: 0;
     }
 
     .row-country {
-      font-size: 10px;
+      font-size: 11px;
       color: var(--text-secondary);
-      font-weight: 400;
+      font-weight: 500;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .row-live-badge {
@@ -393,9 +404,9 @@
     }
 
     .row-bar-track {
-      height: 3px;
-      background: rgba(255,255,255,0.12);
-      border-radius: 2px;
+      height: 5px;
+      background: rgba(255,255,255,0.10);
+      border-radius: 3px;
       overflow: hidden;
     }
 
@@ -1379,7 +1390,7 @@
           ? `<span class="row-live-badge">LIVE</span>` : "";
         const change     = entry.todayPoints || 0;
         const groupLabel = entry.group && entry.group !== "?"
-          ? ` · Grp ${entry.group}` : "";
+          ? ` · Group ${entry.group}` : "";
 
         const barPct   = Math.max(Math.round((entry.points / maxPoints) * 100), entry.points > 0 ? 2 : 0);
         const barClass = entry.rank === 1 ? "rank-1" : entry.rank === 2 ? "rank-2" : entry.rank === 3 ? "rank-3" : "rank-other";
@@ -1387,23 +1398,16 @@
         const todayBadge = entry.hasMatchToday && !entry.isLive
           ? `<span class="row-plays-today">⚽ TODAY</span>` : "";
 
-        const groupChip = entry.group && entry.group !== "?"
-          ? `<span style="background:rgba(255,255,255,0.06);border-radius:3px;padding:0 5px;color:var(--text-secondary);font-weight:600">GRP ${entry.group}</span>`
-          : "";
-
         const record = entry.played > 0
-          ? `${groupChip}
-             <span class="row-record">
+          ? `<span class="row-record">
                <span class="row-record-item w">W${entry.wins}</span>
                <span class="row-record-item d">D${entry.draws}</span>
                <span class="row-record-item l">L${entry.losses}</span>
              </span>
              <span style="color:var(--text-muted)">·</span>
-             <span>⚽ ${entry.goalsFor}</span>
+             <span style="color:var(--text-muted)">⚽ ${entry.goalsFor}</span>
              ${todayBadge}`
-          : `${groupChip}
-             <span style="color:var(--text-muted)">0 matches played</span>
-             ${todayBadge}`;
+          : `${todayBadge}`;
 
         const todayLine = change !== 0
           ? `<div class="row-today ${changeClass(change)}">${change > 0 ? "+" : ""}${change} today</div>`
@@ -1414,9 +1418,11 @@
             <div class="row-rank ${rankClass}">${entry.rank}</div>
             <div class="row-identity">
               ${flagImg(entry.countryCode, 30, 22, "row-flag")}
-              <div class="row-name-group">
-                <div class="row-name">${entry.name}${liveBadge}</div>
-                <div class="row-country">${entry.country}${groupLabel}</div>
+              <div class="row-name-line">
+                <span class="row-name">${entry.name}</span>
+                ${liveBadge}
+                <span class="row-name-sep">·</span>
+                <span class="row-country">${entry.country}${groupLabel}</span>
               </div>
             </div>
             <div class="row-bar-section">
