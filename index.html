@@ -2123,6 +2123,54 @@
     }
 
     // ============================================================
+    // GROUP STANDINGS AUTO-SCROLL
+    // Slowly scrolls the group panel up and down in a loop.
+    // Pauses briefly at the top and bottom before reversing.
+    // ============================================================
+    function startGroupScroll() {
+      const el = document.getElementById("groups-scroll");
+      if (!el) return;
+
+      const SPEED     = 0.4;   // px per frame (~24px/sec at 60fps)
+      const PAUSE_MS  = 1800;  // pause at top/bottom before reversing
+
+      let direction = 1; // 1 = scrolling down, -1 = scrolling up
+      let paused    = false;
+      let rafId     = null;
+
+      function pause() {
+        paused = true;
+        setTimeout(() => { paused = false; }, PAUSE_MS);
+      }
+
+      function tick() {
+        if (!paused) {
+          el.scrollTop += SPEED * direction;
+
+          const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+          const atTop    = el.scrollTop <= 0;
+
+          if (direction === 1 && atBottom) {
+            el.scrollTop = el.scrollHeight; // snap to true bottom
+            direction = -1;
+            pause();
+          } else if (direction === -1 && atTop) {
+            el.scrollTop = 0;
+            direction = 1;
+            pause();
+          }
+        }
+        rafId = requestAnimationFrame(tick);
+      }
+
+      // Pause scroll while the user hovers over the panel
+      el.addEventListener("mouseenter", () => { paused = true; });
+      el.addEventListener("mouseleave", () => { paused = false; });
+
+      rafId = requestAnimationFrame(tick);
+    }
+
+    // ============================================================
     // BOOT
     // ============================================================
     (async function boot() {
@@ -2130,6 +2178,7 @@
       await loadData();
       renderAll();
       startLiveTicker();
+      startGroupScroll();
       setInterval(refresh, REFRESH_INTERVAL_MS);
     })();
   </script>
