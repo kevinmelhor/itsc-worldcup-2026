@@ -225,12 +225,12 @@
 
     /* ============================================================
        MAIN CONTENT AREA
-       Two columns: leaderboard (wider) + right panel (narrower)
+       Three columns: leaderboard | group standings | matches/results
     ============================================================ */
     #main {
       grid-area: main;
       display: grid;
-      grid-template-columns: 3fr 2fr;
+      grid-template-columns: 5fr 3fr 3fr;
       gap: 10px;
       min-height: 0; /* Required for children to respect overflow */
     }
@@ -484,6 +484,112 @@
     .row-today.positive { color: var(--positive); }
     .row-today.negative { color: var(--negative); }
     .row-today.zero     { color: var(--text-muted); }
+
+    /* ============================================================
+       GROUP STANDINGS PANEL (middle column)
+    ============================================================ */
+    #groups-panel {
+      min-height: 0;
+    }
+
+    #groups-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 12px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .group-table {
+      flex-shrink: 0;
+    }
+
+    .group-table-title {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      padding: 2px 4px 6px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2px;
+    }
+
+    .group-col-headers {
+      display: grid;
+      grid-template-columns: 18px 26px 1fr 20px 20px 20px 28px;
+      gap: 3px;
+      padding: 3px 4px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    .group-row {
+      display: grid;
+      grid-template-columns: 18px 26px 1fr 20px 20px 20px 28px;
+      align-items: center;
+      gap: 3px;
+      padding: 4px 4px;
+      border-radius: 4px;
+      font-size: 11px;
+      transition: background 0.15s;
+    }
+
+    .group-row.is-pick {
+      background: rgba(200, 16, 46, 0.10);
+      border: 1px solid rgba(200, 16, 46, 0.18);
+    }
+
+    .group-row.advancing {
+      border-left: 2px solid rgba(0, 200, 83, 0.45);
+    }
+
+    .group-row.advancing.is-pick {
+      border-left: 2px solid rgba(200, 16, 46, 0.6);
+    }
+
+    .group-pos {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .group-team-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .group-team-name.is-pick {
+      color: #ff8fa3;
+    }
+
+    .group-stat {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .group-pts-col {
+      text-align: right;
+      font-weight: 800;
+      font-size: 12px;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .group-pts-col.is-pick {
+      color: var(--gold);
+    }
 
     /* ============================================================
        RIGHT PANEL (matches + recent results, stacked vertically)
@@ -987,6 +1093,17 @@
         </div>
       </div>
 
+      <!-- GROUP STANDINGS PANEL -->
+      <div class="panel" id="groups-panel">
+        <div class="panel-header">
+          <span class="panel-title">Group Standings</span>
+          <span class="panel-subtitle">Staff picks in red</span>
+        </div>
+        <div id="groups-scroll">
+          <div id="groups-list"></div>
+        </div>
+      </div>
+
       <!-- RIGHT PANEL: Matches + Results stacked -->
       <div id="right-panel">
 
@@ -1096,13 +1213,14 @@
     // STATE
     // ============================================================
     const state = {
-      leaderboard:   [],
-      matches:       [],
-      countryPoints: {},
-      staffPicks:    [],
-      groupInfo:     {},  // country name -> group letter (e.g. "A")
-      liveMinute:    67,  // Mock mode only
-      lastUpdated:   new Date(),
+      leaderboard:    [],
+      matches:        [],
+      countryPoints:  {},
+      staffPicks:     [],
+      groupInfo:      {},  // country name -> group letter (e.g. "A")
+      groupStandings: [], // raw standing rows from API
+      liveMinute:     67, // Mock mode only
+      lastUpdated:    new Date(),
     };
 
     // ============================================================
@@ -1473,17 +1591,21 @@
       return eventsMap;
     }
 
-    // Fetches group standings to get group letter per country
+    // Fetches group standings from API.
+    // Returns { groupInfo, standings } where:
+    //   groupInfo: country name -> group letter
+    //   standings: raw array of standing rows
     async function fetchGroupInfoFromAPI(headers) {
       const res  = await fetch(`${API_BASE}/fifa/worldcup/v1/group_standings`, { headers });
       const data = await res.json();
+      const rows = data.data || [];
       const info = {};
-      for (const row of (data.data || [])) {
+      for (const row of rows) {
         const name  = row.team?.name;
         const group = (row.group?.name || "").replace("Group ", "").trim();
         if (name) info[name] = group;
       }
-      return info;
+      return { groupInfo: info, standings: rows };
     }
 
     // ============================================================
@@ -1501,8 +1623,10 @@
       try {
         const headers = { "Authorization": `Bearer ${API_KEY}` };
 
-        // Group info (for leaderboard group labels)
-        state.groupInfo = await fetchGroupInfoFromAPI(headers);
+        // Group info (for leaderboard group labels) + full standings
+        const gResult = await fetchGroupInfoFromAPI(headers);
+        state.groupInfo      = gResult.groupInfo;
+        state.groupStandings = gResult.standings;
 
         // All matches, normalized to internal format
         const rawMatches = await fetchAllMatchesFromAPI(headers);
@@ -1864,6 +1988,71 @@
     }
 
     // ============================================================
+    // RENDER: GROUP STANDINGS
+    // Displays all group tables from the API with staff picks highlighted.
+    // ============================================================
+    function renderGroupStandings() {
+      const container = document.getElementById("groups-list");
+      const standings = state.groupStandings;
+
+      if (!standings.length) {
+        container.innerHTML = `
+          <div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px;">
+            Loading standings...
+          </div>`;
+        return;
+      }
+
+      // Group rows by group letter
+      const grouped = {};
+      for (const row of standings) {
+        const letter = (row.group?.name || "").replace("Group ", "").trim() || "?";
+        if (!grouped[letter]) grouped[letter] = [];
+        grouped[letter].push(row);
+      }
+
+      const sortedLetters = Object.keys(grouped).sort();
+      const pickedCountries = new Set(state.staffPicks.map(p => p.country));
+
+      container.innerHTML = sortedLetters.map(letter => {
+        const rows = grouped[letter].slice().sort((a, b) => (a.position || 0) - (b.position || 0));
+
+        const rowsHtml = rows.map(row => {
+          const name  = row.team?.name || "?";
+          const code  = getFlagCode(row.team?.country_code || "");
+          const isPick = pickedCountries.has(name);
+          const pos   = row.position || 0;
+          const advancing = pos <= 2; // top 2 in each group advance
+
+          return `
+            <div class="group-row ${isPick ? "is-pick" : ""} ${advancing ? "advancing" : ""}">
+              <span class="group-pos">${pos}</span>
+              ${flagImg(code, 20, 15, "")}
+              <span class="group-team-name ${isPick ? "is-pick" : ""}">${name}</span>
+              <span class="group-stat">${row.won    || 0}</span>
+              <span class="group-stat">${row.drawn  || 0}</span>
+              <span class="group-stat">${row.lost   || 0}</span>
+              <span class="group-pts-col ${isPick ? "is-pick" : ""}">${row.points || 0}</span>
+            </div>`;
+        }).join("");
+
+        return `
+          <div class="group-table">
+            <div class="group-table-title">Group ${letter}</div>
+            <div class="group-col-headers">
+              <span></span><span></span>
+              <span>Team</span>
+              <span style="text-align:center">W</span>
+              <span style="text-align:center">D</span>
+              <span style="text-align:center">L</span>
+              <span style="text-align:right">Pts</span>
+            </div>
+            ${rowsHtml}
+          </div>`;
+      }).join("");
+    }
+
+    // ============================================================
     // RENDER: COUNTRY STATUS BAR
     // Shows one tile per unique picked country.
     // ============================================================
@@ -1910,6 +2099,7 @@
     // ============================================================
     function renderAll() {
       renderLeaderboard();
+      renderGroupStandings();
       renderMatches();
       renderResults();
       renderPointEvents();
