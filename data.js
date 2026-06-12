@@ -113,7 +113,7 @@ const MOCK_TEAMS = [
 //
 // NOTE: All picks are valid. Sweden did qualify for 2026.
 // ============================================================
-const MOCK_STAFF_PICKS = [
+const STAFF_PICKS = [
   { name: "Nawal Qaiser",              country: "Mexico",    countryCode: "mx" },
   { name: "Christian Chica",           country: "Portugal",  countryCode: "pt" },
   { name: "Jessica Gonzalez Serrano",  country: "Mexico",    countryCode: "mx" },
@@ -137,6 +137,7 @@ const MOCK_STAFF_PICKS = [
   { name: "Abhi Tamboli",              country: "Spain",     countryCode: "es" },
   { name: "Esma Bartu",                country: "Türkiye",   countryCode: "tr" },
   { name: "Nick Berdzenishvili",       country: "Argentina", countryCode: "ar" },
+  { name: "Kevana Dupree",             country: "Brazil",    countryCode: "br" },
 ];
 
 // ============================================================
@@ -427,12 +428,12 @@ const MOCK_COUNTRY_POINTS = {
 
 // ============================================================
 // LEADERBOARD
-// Built by combining MOCK_STAFF_PICKS with MOCK_COUNTRY_POINTS.
+// Built by combining STAFF_PICKS with MOCK_COUNTRY_POINTS.
 // In production, this comes from the Apps Script output tab.
 // ============================================================
 function buildMockLeaderboard() {
   // Build leaderboard entries from staff picks and country points
-  const entries = MOCK_STAFF_PICKS.map((staff) => {
+  const entries = STAFF_PICKS.map((staff) => {
     const countryData = MOCK_COUNTRY_POINTS[staff.country] || { points: 0, isLive: false };
     const team = MOCK_TEAMS.find((t) => t.name === staff.country);
     return {
@@ -472,7 +473,7 @@ const MOCK_LEADERBOARD = buildMockLeaderboard();
 
 // Returns all staff members who picked a given country name.
 function getStaffForCountry(countryName) {
-  return MOCK_STAFF_PICKS
+  return STAFF_PICKS
     .filter((s) => s.country === countryName)
     .map((s) => s.name);
 }
