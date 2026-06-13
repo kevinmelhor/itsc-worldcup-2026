@@ -1685,14 +1685,22 @@
       // Batch in chunks of 20 to avoid very long URLs
       for (let i = 0; i < matchIds.length; i += 20) {
         const chunk = matchIds.slice(i, i + 20);
-        const qs    = chunk.map(id => `match_ids[]=${id}`).join("&");
-        const res   = await fetch(`${API_BASE}/fifa/worldcup/v1/match_events?${qs}`, { headers });
-        const data  = await res.json();
-        console.log("[Events API] raw response:", JSON.stringify(data).slice(0, 500));
-        for (const e of (data.data || [])) {
-          if (!eventsMap[e.match_id]) eventsMap[e.match_id] = [];
-          eventsMap[e.match_id].push(e);
-        }
+        const baseQs = chunk.map(id => `match_ids[]=${id}`).join("&");
+        // Paginate through all events for this batch
+        let cursor = null;
+        let pageCount = 0;
+        do {
+          const cursorQs = cursor ? `&cursor=${cursor}` : "";
+          const res  = await fetch(`${API_BASE}/fifa/worldcup/v1/match_events?${baseQs}&per_page=100${cursorQs}`, { headers });
+          const data = await res.json();
+          for (const e of (data.data || [])) {
+            if (!eventsMap[e.match_id]) eventsMap[e.match_id] = [];
+            eventsMap[e.match_id].push(e);
+          }
+          cursor = data.meta?.next_cursor || null;
+          pageCount++;
+          if (pageCount >= 5) break; // safety limit per batch
+        } while (cursor);
       }
       return eventsMap;
     }
