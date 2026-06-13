@@ -2,10 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!--
-    Fixed 1920x1080 viewport. The browser is set to 1920x1080 fullscreen
-    on the Mac mini, so we lock the viewport width here for consistent layout.
-  -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ITSC World Cup 2026 Challenge</title>
 
@@ -1316,8 +1312,6 @@
     // STATE
     // All app state lives here in memory. No localStorage used.
     // ============================================================
-    // STATE
-    // ============================================================
     const state = {
       leaderboard:    [],
       matches:        [],
@@ -1556,7 +1550,7 @@
       const cp = {};
 
       function init(name) {
-        if (!cp[name]) cp[name] = { points: 0, isLive: false, wins: 0, draws: 0, losses: 0, played: 0, goalsFor: 0, yellowCards: 0, redCards: 0, ownGoals: 0 };
+        if (!cp[name]) cp[name] = { points: 0, isLive: false, wins: 0, draws: 0, losses: 0, played: 0, goalsFor: 0, yellowCards: 0, redCards: 0, ownGoals: 0, cleanSheets: 0 };
       }
 
       for (const m of matches) {
@@ -1615,6 +1609,17 @@
     function buildLeaderboard(staffPicks, countryPoints) {
       const today = new Date();
 
+      // Pre-compute today's points per country from today's active matches
+      const todayCountryPts = {};
+      for (const m of state.matches) {
+        if (!isSameDay(new Date(m.datetime), today)) continue;
+        if (m.status !== "live" && m.status !== "completed") continue;
+        const result = calculateMatchPoints(m);
+        const h = m.homeTeam?.name, a = m.awayTeam?.name;
+        if (h) todayCountryPts[h] = (todayCountryPts[h] || 0) + result.homePoints;
+        if (a) todayCountryPts[a] = (todayCountryPts[a] || 0) + result.awayPoints;
+      }
+
       const entries = staffPicks.map(pick => {
         const cp    = countryPoints[pick.country] || { points: 0, isLive: false, wins: 0, draws: 0, losses: 0, played: 0, goalsFor: 0, yellowCards: 0, redCards: 0, cleanSheets: 0 };
         const group = state.groupInfo[pick.country] || pick.group || "?";
@@ -1631,7 +1636,7 @@
           countryCode:   pick.countryCode,
           group,
           points:        cp.points,
-          todayPoints:   cp.points,
+          todayPoints:   todayCountryPts[pick.country] || 0,
           isLive:        cp.isLive,
           wins:          cp.wins        || 0,
           draws:         cp.draws       || 0,
@@ -1667,6 +1672,7 @@
     async function fetchAllMatchesFromAPI(headers) {
       const all = [];
       let cursor = null;
+      let pageCount = 0;
       do {
         const url = `${API_BASE}/fifa/worldcup/v1/matches?per_page=100` +
                     (cursor ? `&cursor=${cursor}` : "");
@@ -1674,6 +1680,8 @@
         const data = await res.json();
         all.push(...(data.data || []));
         cursor = data.meta?.next_cursor || null;
+        pageCount++;
+        if (pageCount >= 15) break; // safety limit
       } while (cursor);
       return all;
     }
@@ -1710,7 +1718,7 @@
     //   groupInfo: country name -> group letter
     //   standings: raw array of standing rows
     async function fetchGroupInfoFromAPI(headers) {
-      const res  = await fetch(`${API_BASE}/fifa/worldcup/v1/group_standings`, { headers });
+      const res  = await fetch(`${API_BASE}/fifa/worldcup/v1/group_standings?per_page=100`, { headers });
       const data = await res.json();
       const rows = data.data || [];
       const info = {};
@@ -1737,13 +1745,14 @@
       try {
         const headers = { "Authorization": `Bearer ${API_KEY}` };
 
-        // Group info (for leaderboard group labels) + full standings
-        const gResult = await fetchGroupInfoFromAPI(headers);
+        // Fetch group standings and all matches in parallel
+        const [gResult, rawMatches] = await Promise.all([
+          fetchGroupInfoFromAPI(headers),
+          fetchAllMatchesFromAPI(headers),
+        ]);
+
         state.groupInfo      = gResult.groupInfo;
         state.groupStandings = gResult.standings;
-
-        // All matches, normalized to internal format
-        const rawMatches = await fetchAllMatchesFromAPI(headers);
         state.matches = rawMatches.map(normalizeMatch);
 
         // Events for completed and live matches only
@@ -1980,128 +1989,6 @@
     }
 
     // ============================================================
-    // RENDER: RECENT RESULTS
-    // Shows the last N completed matches.
-    // ============================================================
-    function renderResults() {
-      const container = document.getElementById("results-list");
-
-      const completed = state.matches
-        .filter(m => m.status === "completed")
-        .sort((a, b) => new Date(b.datetime) - new Date(a.datetime))
-        .slice(0, 5);
-
-      if (completed.length === 0) {
-        container.innerHTML = `
-          <div style="padding:24px;text-align:center;color:var(--text-muted);font-size:14px;">
-            No results yet
-          </div>`;
-        return;
-      }
-
-      container.innerHTML = completed.map((match) => {
-        const homeWon = match.homeScore > match.awayScore;
-        const awayWon = match.awayScore > match.homeScore;
-
-        return `
-          <div class="result-card">
-            <div class="result-team home">
-              ${flagImg(match.homeTeam.flagCode, 24, 18, "result-flag")}
-              <span class="result-name" style="${homeWon ? "color:var(--text-primary)" : "color:var(--text-secondary)"}">
-                ${match.homeTeam.name}
-              </span>
-            </div>
-            <div class="result-score-center">
-              <div class="result-score">${match.homeScore} &ndash; ${match.awayScore}</div>
-              <div class="result-meta">GRP ${match.group} &middot; FT</div>
-            </div>
-            <div class="result-team away">
-              ${flagImg(match.awayTeam.flagCode, 24, 18, "result-flag")}
-              <span class="result-name" style="${awayWon ? "color:var(--text-primary)" : "color:var(--text-secondary)"}">
-                ${match.awayTeam.name}
-              </span>
-            </div>
-          </div>`;
-      }).join("");
-    }
-
-    // ============================================================
-    // RENDER: POINT EVENTS FEED
-    // Shows all goals, cards, and own goals from today's matches
-    // that affect at least one staff member's score.
-    // ============================================================
-    function renderPointEvents() {
-      const container = document.getElementById("events-list");
-      const today = new Date();
-
-      // Gather all relevant events from today's matches
-      const feedItems = [];
-      for (const match of state.matches) {
-        if (!isSameDay(new Date(match.datetime), today)) continue;
-        if (match.status !== "live" && match.status !== "completed") continue;
-
-        for (const e of (match.events || [])) {
-          const isHome = e.team === "home";
-          const teamName = isHome ? match.homeTeam.name : match.awayTeam.name;
-          const staff    = getStaffForCountry(teamName);
-
-          let icon, delta, desc;
-          switch (e.type) {
-            case "goal":
-              icon  = "⚽";
-              delta = +4;
-              desc  = `${e.player || "?"} (${match.homeTeam.code} vs ${match.awayTeam.code} ${e.minute}')`;
-              break;
-            case "own_goal":
-              icon  = "↩️";
-              delta = -1;
-              desc  = `${e.player || "?"} OG (${e.minute}')`;
-              break;
-            case "yellow_card":
-              icon  = "🟨";
-              delta = -1;
-              desc  = `${e.player || "?"} (${teamName} ${e.minute}')`;
-              break;
-            case "red_card":
-              icon  = "🟥";
-              delta = -3;
-              desc  = `${e.player || "?"} (${teamName} ${e.minute}')`;
-              break;
-            default: continue;
-          }
-
-          feedItems.push({ icon, delta, desc, staff, minute: e.minute || 0 });
-        }
-      }
-
-      if (feedItems.length === 0) {
-        container.innerHTML = `
-          <div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px;">
-            No events yet today
-          </div>`;
-        return;
-      }
-
-      // Sort most recent first, show last 8
-      feedItems.sort((a, b) => b.minute - a.minute);
-      const display = feedItems.slice(0, 8);
-
-      container.innerHTML = display.map(item => {
-        const deltaClass = item.delta > 0 ? "positive" : "negative";
-        const deltaStr   = (item.delta > 0 ? "+" : "") + item.delta;
-        const staffStr   = item.staff.length > 0
-          ? `<span class="event-staff">${item.staff.join(", ")}</span>`
-          : `<span style="color:var(--text-muted)">no staff</span>`;
-        return `
-          <div class="event-row">
-            <span class="event-icon">${item.icon}</span>
-            <span class="event-desc">${item.desc} — ${staffStr}</span>
-            <span class="event-delta ${deltaClass}">${deltaStr}</span>
-          </div>`;
-      }).join("");
-    }
-
-    // ============================================================
     // RENDER: GROUP STANDINGS
     // Displays all group tables from the API with staff picks highlighted.
     // ============================================================
@@ -2173,22 +2060,20 @@
     function renderGoldenBoot() {
       const list = document.getElementById("golden-boot-list");
       const scorers = {};
-
-      // Build country name → flagCode from all match team data
       const teamFlagMap = {};
-      for (const match of state.matches) {
-        if (match.homeTeam?.name) teamFlagMap[match.homeTeam.name] = match.homeTeam.flagCode;
-        if (match.awayTeam?.name) teamFlagMap[match.awayTeam.name] = match.awayTeam.flagCode;
-      }
 
+      // Single pass: build flag map and count goals simultaneously
       for (const match of state.matches) {
+        const homeName = match.homeTeam?.name || "";
+        const awayName = match.awayTeam?.name || "";
+        if (homeName) teamFlagMap[homeName] = match.homeTeam.flagCode;
+        if (awayName) teamFlagMap[awayName] = match.awayTeam.flagCode;
+
         if (!match.events) continue;
-        const homeTeam = match.homeTeam?.name || "";
-        const awayTeam = match.awayTeam?.name || "";
         for (const e of match.events) {
           if (e.type !== "goal") continue;
           const player = e.player || "Unknown";
-          const teamName = e.team === "home" ? homeTeam : awayTeam;
+          const teamName = e.team === "home" ? homeName : awayName;
           const key = player + "|" + teamName;
           if (!scorers[key]) scorers[key] = { player, team: teamName, goals: 0 };
           scorers[key].goals++;
@@ -2249,13 +2134,13 @@
         pts: todayCountryPts[p.country] || 0,
       })).sort((a, b) => b.pts - a.pts || a.name.localeCompare(b.name));
 
-      const active = movers.filter(m => m.pts !== 0);
-      const display = active.length > 0 ? active : movers.slice(0, 8);
-
-      if (display.length === 0) {
+      if (todayMatches.length === 0) {
         list.innerHTML = `<div style="padding:12px;color:var(--text-muted);font-size:11px;text-align:center;">No matches today yet</div>`;
         return;
       }
+
+      const active = movers.filter(m => m.pts !== 0);
+      const display = active.length > 0 ? active : movers;
 
       list.innerHTML = display.map(m => {
         const cls = m.pts > 0 ? "positive" : m.pts < 0 ? "negative" : "zero";
@@ -2293,10 +2178,11 @@
           .map(p => p.name.split(" ")[0])
           .join(", ");
 
-        // Form: last 3 completed matches
+        // Form: last 3 completed matches, sorted by date
         const completed = state.matches
           .filter(m => m.status === "completed" &&
             (m.homeTeam?.name === pick.country || m.awayTeam?.name === pick.country))
+          .sort((a, b) => new Date(a.datetime) - new Date(b.datetime))
           .slice(-3);
 
         const form = completed.map(m => {
