@@ -2174,10 +2174,17 @@
       const list = document.getElementById("golden-boot-list");
       const scorers = {};
 
+      // Build country name → flagCode from all match team data
+      const teamFlagMap = {};
+      for (const match of state.matches) {
+        if (match.homeTeam?.name) teamFlagMap[match.homeTeam.name] = match.homeTeam.flagCode;
+        if (match.awayTeam?.name) teamFlagMap[match.awayTeam.name] = match.awayTeam.flagCode;
+      }
+
       for (const match of state.matches) {
         if (!match.events) continue;
-        const homeTeam = match.homeTeam ? match.homeTeam.name : "";
-        const awayTeam = match.awayTeam ? match.awayTeam.name : "";
+        const homeTeam = match.homeTeam?.name || "";
+        const awayTeam = match.awayTeam?.name || "";
         for (const e of match.events) {
           if (e.type !== "goal") continue;
           const player = e.player || "Unknown";
@@ -2199,9 +2206,7 @@
       list.innerHTML = sorted.map((s, i) => {
         if (i > 0 && s.goals < sorted[i - 1].goals) rank = i + 1;
         const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
-        // Find flag for the team
-        const pick = state.staffPicks.find(p => p.country === s.team);
-        const flagCode = pick ? pick.countryCode : null;
+        const flagCode = teamFlagMap[s.team];
         const flag = flagCode ? flagImg(flagCode, 20, 15) : "🏳";
         return `
           <div class="boot-row">
