@@ -1843,9 +1843,12 @@
           code:     m.away_team?.abbreviation || awayCode,
           flagCode: getFlagCode(awayCode),
         },
-        homeScore: m.home_score,
-        awayScore: m.away_score,
-        events:    [],
+        homeScore:      m.home_score,
+        awayScore:      m.away_score,
+        // Penalty shootout scores (null if match didn't go to penalties)
+        homePenalties:  m.home_score_penalties ?? m.home_penalties ?? null,
+        awayPenalties:  m.away_score_penalties ?? m.away_penalties ?? null,
+        events:         [],
       };
     }
 
@@ -1890,6 +1893,19 @@
     // ============================================================
     // POINT CALCULATION (runs in the browser from API data)
     // ============================================================
+
+    // Returns the one-time advancement bonus for winning a knockout round.
+    function getAdvancementBonus(roundName) {
+      if (!roundName) return 0;
+      const n = roundName.toLowerCase();
+      if (n.includes("round of 32"))  return POINTS.ADVANCE_R16;
+      if (n.includes("round of 16"))  return POINTS.ADVANCE_QF;
+      if (n.includes("quarter"))      return POINTS.ADVANCE_SF;
+      if (n.includes("semi"))         return POINTS.ADVANCE_FINAL;
+      // "Final" but NOT "semi-final" or "third place"
+      if (n.includes("final") && !n.includes("semi") && !n.includes("third")) return POINTS.WIN_FINAL;
+      return 0;
+    }
 
     function getEventPoints(type) {
       switch (type) {
@@ -1983,6 +1999,46 @@
           if (hs === 0) cp[m.awayTeam.name].cleanSheets++;
         }
       }
+      // ---- Knockout advancement bonuses ----
+      // Post-process completed knockout matches (no group letter) to:
+      //   1. Fix matches decided by penalties — swap DRAW points to WIN for actual winner
+      //   2. Award the one-time round advancement bonus to the winner
+      for (const m of matches) {
+        if (m.status !== "completed" || m.group) continue;
+        if (!m.round) continue;
+
+        const hName = m.homeTeam?.name;
+        const aName = m.awayTeam?.name;
+        if (!hName || !aName || !cp[hName] || !cp[aName]) continue;
+
+        const hs = m.homeScore || 0;
+        const as = m.awayScore || 0;
+        let winnerName = null;
+
+        if (hs > as) {
+          winnerName = hName;
+        } else if (as > hs) {
+          winnerName = aName;
+        } else {
+          // Tied at full time — check penalty scores
+          const hp = m.homePenalties;
+          const ap = m.awayPenalties;
+          if (hp != null && ap != null && hp !== ap) {
+            winnerName = hp > ap ? hName : aName;
+            const loserName = hp > ap ? aName : hName;
+            // Correct the DRAW (+1) that calculateMatchPoints already gave both teams
+            cp[hName].points -= POINTS.DRAW;
+            cp[aName].points -= POINTS.DRAW;
+            cp[winnerName].points += POINTS.WIN;
+          }
+        }
+
+        if (winnerName) {
+          const bonus = getAdvancementBonus(m.round);
+          if (bonus > 0) cp[winnerName].points += bonus;
+        }
+      }
+
       return cp;
     }
 
@@ -2173,8 +2229,14 @@
 
       const maxPoints = Math.max(...entries.map(e => e.points), 1);
 
+      // Compute point tiers once for the whole leaderboard so that ties
+      // (e.g. two people at rank 2 → rank jumps to 4, no rank 3) still get
+      // correct gold/silver/bronze colours and bars.
+      const uniquePoints = [...new Set(entries.map(e => e.points))].sort((a, b) => b - a);
+
       list.innerHTML = entries.map((entry) => {
-        const rankClass  = entry.rank <= 3 ? `rank-${entry.rank}` : "";
+        const tier       = uniquePoints.indexOf(entry.points) + 1;
+        const rankClass  = tier <= 3 ? `rank-${tier}` : "";
         const liveClass  = entry.isLive ? "is-live" : "";
         const liveBadge  = entry.isLive
           ? `<span class="row-live-badge">LIVE</span>` : "";
@@ -2183,7 +2245,7 @@
           ? ` · Group ${entry.group}` : "";
 
         const barPct   = Math.max(Math.round((entry.points / maxPoints) * 100), entry.points > 0 ? 2 : 0);
-        const barClass = entry.rank === 1 ? "rank-1" : entry.rank === 2 ? "rank-2" : entry.rank === 3 ? "rank-3" : "rank-other";
+        const barClass = tier === 1 ? "rank-1" : tier === 2 ? "rank-2" : tier === 3 ? "rank-3" : "rank-other";
 
         const todayBadge = entry.hasMatchToday && !entry.isLive
           ? `<span class="row-plays-today">⚽ TODAY</span>` : "";
@@ -2263,11 +2325,15 @@
           </div>`;
       }).join("");
 
-      // Animated counters (first load only)
+      // Animated counters on first load; direct value set on subsequent refreshes
       if (!state._countersAnimated) {
         state._countersAnimated = true;
         list.querySelectorAll(".pts-num").forEach(function(el) {
           animateValue(el, 0, parseInt(el.dataset.v, 10) || 0, 900);
+        });
+      } else {
+        list.querySelectorAll(".pts-num").forEach(function(el) {
+          el.textContent = el.dataset.v;
         });
       }
 
@@ -2517,7 +2583,16 @@
       const sortedRoundNames = Object.keys(rounds).sort((a, b) => getRoundSortKey(a) - getRoundSortKey(b));
       const pickedCountries  = new Set(state.staffPicks.map(p => p.country));
 
-      container.innerHTML = sortedRoundNames.map(roundName => {
+      // Show only the current active round: the earliest round that still has
+      // live or scheduled matches. Once a round is fully complete the view
+      // automatically advances to the next. If everything is done, show the Final.
+      const activeRound = sortedRoundNames.find(r =>
+        rounds[r].some(m => m.status === "live" || m.status === "scheduled")
+      ) || sortedRoundNames[sortedRoundNames.length - 1];
+
+      const visibleRounds = [activeRound];
+
+      container.innerHTML = visibleRounds.map(roundName => {
         const isFinalRound = roundName.toLowerCase().includes("final");
         const matchesHtml  = rounds[roundName].map(m => {
           const isLive      = m.status === "live";
@@ -2869,16 +2944,21 @@
 
       const maxPts = entries.length > 0 && entries[0].points > 0 ? entries[0].points : 1;
 
+      // Tier-based medals: two people tied at rank 2 both get 🥈,
+      // and the next person (rank 4) still gets a number, not 🥉.
+      const mobUniquePts = [...new Set(entries.map(function(e) { return e.points; }))].sort(function(a, b) { return b - a; });
+
       let rank = 1;
       el.innerHTML = entries.map(function(e, i) {
         if (i > 0 && e.points < entries[i - 1].points) rank = i + 1;
-        const isTop3  = rank <= 3;
-        const medal   = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : null;
+        const tier    = mobUniquePts.indexOf(e.points) + 1;
+        const isTop3  = tier <= 3;
+        const medal   = tier === 1 ? "🥇" : tier === 2 ? "🥈" : tier === 3 ? "🥉" : null;
         const rankEl  = medal
           ? `<div class="mob-lb-rank">${medal}</div>`
           : `<div class="mob-lb-rank"><span class="mob-lb-rank-num">${rank}</span></div>`;
         const barPct  = Math.max(Math.round((e.points / maxPts) * 100), e.points > 0 ? 2 : 0);
-        const barClr  = rank === 1 ? "var(--gold)" : rank <= 3 ? "var(--scarlet)" : "var(--text-muted)";
+        const barClr  = tier === 1 ? "var(--gold)" : tier <= 3 ? "var(--scarlet)" : "var(--text-muted)";
         return `
           <div class="mob-lb-row${isTop3 ? " top3" : ""}" style="position:relative;overflow:hidden">
             ${rankEl}
@@ -3044,7 +3124,14 @@
       const sortedRoundNames = Object.keys(rounds).sort(function(a, b) { return getRoundSortKey(a) - getRoundSortKey(b); });
       const pickedCountries  = new Set(state.staffPicks.map(function(p) { return p.country; }));
 
-      el.innerHTML = sortedRoundNames.map(function(roundName) {
+      // Show only the current active round (same logic as desktop bracket)
+      const activeRound = sortedRoundNames.find(function(r) {
+        return rounds[r].some(function(m) { return m.status === "live" || m.status === "scheduled"; });
+      }) || sortedRoundNames[sortedRoundNames.length - 1];
+
+      const visibleRounds = [activeRound];
+
+      el.innerHTML = visibleRounds.map(function(roundName) {
         const isFinalRound = roundName.toLowerCase().includes("final");
         const matchesHtml  = rounds[roundName].map(function(m) {
           const isLive      = m.status === "live";
