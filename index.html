@@ -1132,6 +1132,214 @@
 
     /* Scrollbar hidden globally */
     ::-webkit-scrollbar { display: none; }
+
+    /* ============================================================
+       MOBILE LAYOUT (≤ 768px)
+       The desktop #dashboard is hidden; #mob-view takes over with
+       a single-column layout and a fixed bottom tab bar.
+    ============================================================ */
+
+    #mob-view { display: none; }
+
+    @media (max-width: 768px) {
+      html, body { height: auto; overflow-y: auto; overflow-x: hidden; }
+      #dashboard { display: none !important; }
+
+      #mob-view {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        background: var(--bg-base);
+        color: var(--text-primary);
+        font-family: var(--font);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ── Sticky header ── */
+      #mob-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: var(--bg-panel);
+        border-bottom: 1px solid var(--border);
+        border-left: 4px solid var(--scarlet);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+      .mob-brand { display: flex; align-items: center; gap: 10px; }
+      .mob-brand-icon {
+        width: 34px; height: 34px;
+        background: var(--scarlet); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 17px; flex-shrink: 0;
+      }
+      .mob-brand-title { font-size: 13px; font-weight: 800; letter-spacing: -0.3px; }
+      .mob-brand-sub   { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+      .mob-header-right { text-align: right; }
+      .mob-header-day   { font-size: 10px; color: var(--text-muted); }
+      .mob-header-day strong { color: var(--gold); font-size: 13px; }
+      .mob-header-updated { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+      /* ── Tab panels ── */
+      #mob-panels {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 12px 12px 82px;
+      }
+      .mob-panel { display: none; }
+      .mob-panel.active { display: block; }
+
+      /* ── Bottom tab bar ── */
+      #mob-tab-bar {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        display: flex;
+        background: var(--bg-panel);
+        border-top: 1px solid var(--border);
+        z-index: 100;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      .mob-tab {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        padding: 9px 4px 7px;
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 10px;
+        font-family: var(--font);
+        cursor: pointer;
+        transition: color 0.18s;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .mob-tab.active { color: var(--scarlet); }
+      .mob-tab-icon { font-size: 20px; line-height: 1; }
+
+      /* ── Section label ── */
+      .mob-section-title {
+        font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
+        text-transform: uppercase; color: var(--text-muted);
+        margin: 0 0 8px;
+      }
+
+      /* ── Leaderboard rows ── */
+      .mob-lb-row {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 12px;
+        background: var(--bg-panel);
+        border-radius: var(--radius-md);
+        margin-bottom: 6px;
+        border: 1px solid var(--border);
+      }
+      .mob-lb-row.top3 { border-color: rgba(255,215,0,0.25); }
+      .mob-lb-rank { width: 28px; text-align: center; font-size: 20px; flex-shrink: 0; line-height: 1; }
+      .mob-lb-rank-num { font-size: 13px; font-weight: 700; color: var(--text-muted); }
+      .mob-lb-info { flex: 1; min-width: 0; }
+      .mob-lb-name {
+        font-size: 13px; font-weight: 600;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .mob-lb-country { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+      .mob-lb-pts {
+        font-size: 18px; font-weight: 800; color: var(--gold);
+        font-variant-numeric: tabular-nums; flex-shrink: 0;
+      }
+
+      /* ── Match cards ── */
+      .mob-match-card {
+        background: var(--bg-panel);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+        padding: 12px; margin-bottom: 8px;
+      }
+      .mob-match-card.is-live { border-color: rgba(0,230,118,0.4); }
+      .mob-match-teams {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 8px; margin-bottom: 6px;
+      }
+      .mob-match-team {
+        display: flex; align-items: center; gap: 5px;
+        font-size: 11px; font-weight: 600; overflow: hidden;
+      }
+      .mob-match-team.away { flex-direction: row-reverse; text-align: right; }
+      .mob-match-team span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .mob-match-score {
+        font-size: 18px; font-weight: 800;
+        text-align: center; font-variant-numeric: tabular-nums; white-space: nowrap;
+      }
+      .mob-match-score.is-live { color: var(--live-green); }
+      .mob-match-score.kickoff { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+      .mob-match-meta {
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 10px; color: var(--text-muted);
+      }
+      .mob-live-badge { font-size: 10px; font-weight: 700; color: var(--live-green); letter-spacing: 0.5px; }
+      .mob-staff-badge { font-size: 10px; color: var(--scarlet); font-weight: 600; }
+      .mob-no-matches { text-align: center; color: var(--text-muted); padding: 40px 0; font-size: 13px; }
+
+      /* ── Group tables ── */
+      .mob-group-card {
+        background: var(--bg-panel);
+        border-radius: var(--radius-md); border: 1px solid var(--border);
+        margin-bottom: 12px; overflow: hidden;
+      }
+      .mob-group-title {
+        background: var(--scarlet);
+        padding: 6px 12px; font-size: 11px; font-weight: 700; letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+      .mob-group-head {
+        display: grid;
+        grid-template-columns: 22px 1fr 24px 24px 24px 30px;
+        padding: 5px 12px 3px;
+        font-size: 10px; color: var(--text-muted); font-weight: 600;
+        border-bottom: 1px solid var(--border); gap: 4px;
+      }
+      .mob-group-row {
+        display: grid;
+        grid-template-columns: 22px 1fr 24px 24px 24px 30px;
+        align-items: center;
+        padding: 7px 12px; border-bottom: 1px solid var(--border);
+        font-size: 11px; gap: 4px;
+      }
+      .mob-group-row:last-child { border-bottom: none; }
+      .mob-group-row.is-pick { background: rgba(200,16,46,0.07); }
+      .mob-group-row.advancing { border-left: 3px solid rgba(255,215,0,0.5); }
+      .mob-group-team { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .mob-group-stat { text-align: center; color: var(--text-muted); }
+      .mob-group-pts  { text-align: center; font-weight: 700; color: var(--gold); }
+
+      /* ── More tab ── */
+      .mob-card {
+        background: var(--bg-panel);
+        border-radius: var(--radius-md); border: 1px solid var(--border);
+        overflow: hidden; margin-bottom: 6px;
+      }
+      .mob-boot-row {
+        display: flex; align-items: center; gap: 8px;
+        padding: 9px 12px; border-bottom: 1px solid var(--border); font-size: 12px;
+      }
+      .mob-boot-row:last-child { border-bottom: none; }
+      .mob-boot-player { flex: 1; font-weight: 500; }
+      .mob-boot-goals  { font-weight: 700; color: var(--gold); flex-shrink: 0; }
+      .mob-pick-row {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 12px; border-bottom: 1px solid var(--border);
+      }
+      .mob-pick-row:last-child { border-bottom: none; }
+      .mob-pick-info { flex: 1; min-width: 0; }
+      .mob-pick-country { font-size: 13px; font-weight: 700; }
+      .mob-pick-staff   { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+      .mob-pick-pts { font-size: 16px; font-weight: 800; color: var(--gold); flex-shrink: 0; }
+    }
   </style>
 </head>
 
@@ -1256,6 +1464,42 @@
     </div>
 
   </div><!-- #dashboard -->
+
+  <!-- ============================================================
+       MOBILE VIEW  (≤ 768px)
+       Hidden on desktop via CSS media query.
+  ============================================================ -->
+  <div id="mob-view">
+
+    <div id="mob-header">
+      <div class="mob-brand">
+        <div class="mob-brand-icon">&#9917;</div>
+        <div>
+          <div class="mob-brand-title">ITSC World Cup 2026</div>
+          <div class="mob-brand-sub">IT Service Center Challenge</div>
+        </div>
+      </div>
+      <div class="mob-header-right">
+        <div class="mob-header-day">Day <strong id="mob-day">1</strong></div>
+        <div class="mob-header-updated" id="mob-updated">Loading...</div>
+      </div>
+    </div>
+
+    <div id="mob-panels">
+      <div class="mob-panel active" id="mob-panel-standings"><div id="mob-leaderboard"></div></div>
+      <div class="mob-panel"        id="mob-panel-matches">  <div id="mob-matches"></div></div>
+      <div class="mob-panel"        id="mob-panel-groups">   <div id="mob-groups"></div></div>
+      <div class="mob-panel"        id="mob-panel-more">     <div id="mob-more"></div></div>
+    </div>
+
+    <nav id="mob-tab-bar">
+      <button class="mob-tab active" data-panel="standings"><span class="mob-tab-icon">🏆</span><span>Standings</span></button>
+      <button class="mob-tab"        data-panel="matches">  <span class="mob-tab-icon">⚽</span><span>Matches</span></button>
+      <button class="mob-tab"        data-panel="groups">   <span class="mob-tab-icon">🌍</span><span>Groups</span></button>
+      <button class="mob-tab"        data-panel="more">     <span class="mob-tab-icon">⭐</span><span>More</span></button>
+    </nav>
+
+  </div><!-- #mob-view -->
 
   <!-- Staff and match data -->
   <script src="data.js"></script>
@@ -2277,6 +2521,7 @@
       renderPointMovers();
       renderStaffPickSummary();
       renderCountryGrid();
+      renderMobileAll();
 
       // Update "last updated" timestamp
       state.lastUpdated = new Date();
@@ -2284,6 +2529,262 @@
       el.textContent = formatTime(state.lastUpdated);
       el.classList.add("refresh-flash");
       setTimeout(() => el.classList.remove("refresh-flash"), 2000);
+    }
+
+    // ============================================================
+    // MOBILE TAB SWITCHING
+    // ============================================================
+    document.querySelectorAll(".mob-tab").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        document.querySelectorAll(".mob-tab").forEach(function(b) { b.classList.remove("active"); });
+        document.querySelectorAll(".mob-panel").forEach(function(p) { p.classList.remove("active"); });
+        btn.classList.add("active");
+        document.getElementById("mob-panel-" + btn.dataset.panel).classList.add("active");
+      });
+    });
+
+    // ============================================================
+    // MOBILE RENDER: MAIN DISPATCHER
+    // ============================================================
+    function renderMobileAll() {
+      renderMobileLeaderboard();
+      renderMobileMatches();
+      renderMobileGroups();
+      renderMobileMore();
+      const dayEl = document.getElementById("mob-day");
+      if (dayEl) dayEl.textContent = getTournamentDay();
+      const upEl = document.getElementById("mob-updated");
+      if (upEl) upEl.textContent = "Updated " + formatTime(new Date());
+    }
+
+    // ============================================================
+    // MOBILE RENDER: LEADERBOARD
+    // ============================================================
+    function renderMobileLeaderboard() {
+      const el = document.getElementById("mob-leaderboard");
+      if (!el) return;
+
+      const entries = state.staffPicks.map(function(p) {
+        const cp = state.countryPoints[p.country] || { points: 0 };
+        return { name: p.name, country: p.country, countryCode: p.countryCode, points: cp.points };
+      }).sort(function(a, b) {
+        return b.points !== a.points ? b.points - a.points : a.name.localeCompare(b.name);
+      });
+
+      let rank = 1;
+      el.innerHTML = entries.map(function(e, i) {
+        if (i > 0 && e.points < entries[i - 1].points) rank = i + 1;
+        const isTop3 = rank <= 3;
+        const medal  = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : null;
+        const rankEl = medal
+          ? `<div class="mob-lb-rank">${medal}</div>`
+          : `<div class="mob-lb-rank"><span class="mob-lb-rank-num">${rank}</span></div>`;
+        return `
+          <div class="mob-lb-row${isTop3 ? " top3" : ""}">
+            ${rankEl}
+            ${flagImg(e.countryCode, 28, 21)}
+            <div class="mob-lb-info">
+              <div class="mob-lb-name">${e.name}</div>
+              <div class="mob-lb-country">${e.country}</div>
+            </div>
+            <div class="mob-lb-pts">${e.points}</div>
+          </div>`;
+      }).join("");
+    }
+
+    // ============================================================
+    // MOBILE RENDER: MATCHES
+    // ============================================================
+    function renderMobileMatches() {
+      const el = document.getElementById("mob-matches");
+      if (!el) return;
+
+      const today = new Date();
+      const todayMatches = state.matches.filter(function(m) {
+        return isSameDay(new Date(m.datetime), today);
+      });
+      const upcoming = state.matches.filter(function(m) {
+        return m.status === "scheduled" && !isSameDay(new Date(m.datetime), today);
+      }).slice(0, 6);
+
+      if (todayMatches.length === 0 && upcoming.length === 0) {
+        el.innerHTML = `<div class="mob-no-matches">No matches scheduled today</div>`;
+        return;
+      }
+
+      let html = "";
+      if (todayMatches.length > 0) {
+        html += `<div class="mob-section-title">Today's Matches</div>`;
+        html += todayMatches.map(mobMatchCard).join("");
+      }
+      if (upcoming.length > 0) {
+        html += `<div class="mob-section-title" style="margin-top:14px">Upcoming</div>`;
+        html += upcoming.map(mobMatchCard).join("");
+      }
+      el.innerHTML = html;
+    }
+
+    function mobMatchCard(m) {
+      const home = m.homeTeam ? m.homeTeam.name : "TBD";
+      const away = m.awayTeam ? m.awayTeam.name : "TBD";
+      const homeFlag = m.homeTeam && m.homeTeam.flagCode ? flagImg(m.homeTeam.flagCode, 22, 16) : "";
+      const awayFlag = m.awayTeam && m.awayTeam.flagCode ? flagImg(m.awayTeam.flagCode, 22, 16) : "";
+      const isLive      = m.status === "live";
+      const isCompleted = m.status === "completed";
+
+      let scoreHtml;
+      if (isLive) {
+        scoreHtml = `<div class="mob-match-score is-live">${m.homeScore ?? 0}–${m.awayScore ?? 0}</div>`;
+      } else if (isCompleted) {
+        scoreHtml = `<div class="mob-match-score">${m.homeScore ?? 0}–${m.awayScore ?? 0}</div>`;
+      } else {
+        scoreHtml = `<div class="mob-match-score kickoff">${formatKickoff(m.datetime)}</div>`;
+      }
+
+      const staffHome = getStaffForCountry(home);
+      const staffAway = getStaffForCountry(away);
+      const staffParts = staffHome.map(function(n) { return n + " 🔴"; })
+                 .concat(staffAway.map(function(n) { return n + " 🔵"; }));
+      const staffLine = staffParts.length
+        ? `<span class="mob-staff-badge">${staffParts.join(" · ")}</span>` : "";
+      const liveLine  = isLive ? `<span class="mob-live-badge">🔴 LIVE</span>` : `<span></span>`;
+
+      return `
+        <div class="mob-match-card${isLive ? " is-live" : ""}">
+          <div class="mob-match-teams">
+            <div class="mob-match-team">${homeFlag}<span>${home}</span></div>
+            ${scoreHtml}
+            <div class="mob-match-team away"><span>${away}</span>${awayFlag}</div>
+          </div>
+          <div class="mob-match-meta">${liveLine}${staffLine}</div>
+        </div>`;
+    }
+
+    // ============================================================
+    // MOBILE RENDER: GROUP STANDINGS
+    // ============================================================
+    function renderMobileGroups() {
+      const el = document.getElementById("mob-groups");
+      if (!el) return;
+
+      const standings = state.groupStandings;
+      if (!standings || !standings.length) {
+        el.innerHTML = `<div class="mob-no-matches">Loading standings...</div>`;
+        return;
+      }
+
+      const pickedCountries = new Set(state.staffPicks.map(function(p) { return p.country; }));
+
+      const grouped = {};
+      standings.forEach(function(row) {
+        const letter = (row.group && row.group.name ? row.group.name : "").replace("Group ", "").trim() || "?";
+        if (!grouped[letter]) grouped[letter] = [];
+        grouped[letter].push(row);
+      });
+
+      el.innerHTML = Object.keys(grouped).sort().map(function(letter) {
+        const rows = grouped[letter].slice().sort(function(a, b) { return (a.position || 0) - (b.position || 0); });
+        const rowsHtml = rows.map(function(row) {
+          const name     = row.team ? row.team.name : "?";
+          const code     = getFlagCode(row.team ? (row.team.country_code || "") : "");
+          const isPick   = pickedCountries.has(name);
+          const pos      = row.position || 0;
+          const advancing = pos <= 2;
+          const gd = (row.goals_scored || 0) - (row.goals_against || 0);
+          return `
+            <div class="mob-group-row${isPick ? " is-pick" : ""}${advancing ? " advancing" : ""}">
+              ${flagImg(code, 20, 15)}
+              <span class="mob-group-team">${name}</span>
+              <span class="mob-group-stat">${row.won   || 0}</span>
+              <span class="mob-group-stat">${row.drawn || 0}</span>
+              <span class="mob-group-stat">${row.lost  || 0}</span>
+              <span class="mob-group-pts">${row.points || 0}</span>
+            </div>`;
+        }).join("");
+        return `
+          <div class="mob-group-card">
+            <div class="mob-group-title">Group ${letter}</div>
+            <div class="mob-group-head">
+              <span></span><span>Team</span>
+              <span>W</span><span>D</span><span>L</span><span>Pts</span>
+            </div>
+            ${rowsHtml}
+          </div>`;
+      }).join("");
+    }
+
+    // ============================================================
+    // MOBILE RENDER: MORE (Golden Boot + Staff Picks)
+    // ============================================================
+    function renderMobileMore() {
+      const el = document.getElementById("mob-more");
+      if (!el) return;
+
+      // Golden Boot
+      const scorers = {};
+      const teamFlagMap = {};
+      state.matches.forEach(function(match) {
+        const homeName = match.homeTeam ? match.homeTeam.name : "";
+        const awayName = match.awayTeam ? match.awayTeam.name : "";
+        if (homeName) teamFlagMap[homeName] = match.homeTeam.flagCode;
+        if (awayName) teamFlagMap[awayName] = match.awayTeam.flagCode;
+        if (!match.events) return;
+        match.events.forEach(function(e) {
+          if (e.type !== "goal") return;
+          const player   = e.player || "Unknown";
+          const teamName = e.team === "home" ? homeName : awayName;
+          const key = player + "|" + teamName;
+          if (!scorers[key]) scorers[key] = { player: player, team: teamName, goals: 0 };
+          scorers[key].goals++;
+        });
+      });
+
+      const sorted = Object.values(scorers).sort(function(a, b) { return b.goals - a.goals; }).slice(0, 8);
+      let bootRank = 1;
+      const bootRows = sorted.length ? sorted.map(function(s, i) {
+        if (i > 0 && s.goals < sorted[i - 1].goals) bootRank = i + 1;
+        const medal    = bootRank === 1 ? "🥇" : bootRank === 2 ? "🥈" : bootRank === 3 ? "🥉" : bootRank;
+        const flagCode = teamFlagMap[s.team];
+        const flag     = flagCode ? flagImg(flagCode, 20, 15) : "🏳";
+        return `
+          <div class="mob-boot-row">
+            <span>${medal}</span>${flag}
+            <span class="mob-boot-player">${s.player}
+              <span style="color:var(--text-muted);font-size:10px;font-weight:400"> ${s.team}</span>
+            </span>
+            <span class="mob-boot-goals">${s.goals} ⚽</span>
+          </div>`;
+      }).join("") : `<div style="padding:14px;text-align:center;color:var(--text-muted);font-size:12px">No goals recorded yet</div>`;
+
+      // Staff picks summary
+      const seen = new Set();
+      const countries = [];
+      state.staffPicks.forEach(function(p) {
+        if (!seen.has(p.country)) { seen.add(p.country); countries.push(p); }
+      });
+
+      const pickRows = countries.map(function(pick) {
+        const pts   = (state.countryPoints[pick.country] || {}).points || 0;
+        const staff = state.staffPicks
+          .filter(function(p) { return p.country === pick.country; })
+          .map(function(p) { return p.name.split(" ")[0]; })
+          .join(", ");
+        return `
+          <div class="mob-pick-row">
+            ${flagImg(pick.countryCode, 26, 20)}
+            <div class="mob-pick-info">
+              <div class="mob-pick-country">${pick.country}</div>
+              <div class="mob-pick-staff">${staff}</div>
+            </div>
+            <div class="mob-pick-pts">${pts}</div>
+          </div>`;
+      }).join("");
+
+      el.innerHTML = `
+        <div class="mob-section-title">⚽ Golden Boot</div>
+        <div class="mob-card">${bootRows}</div>
+        <div class="mob-section-title" style="margin-top:14px">🌍 Staff Picks by Country</div>
+        <div class="mob-card">${pickRows}</div>`;
     }
 
     // ============================================================
