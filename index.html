@@ -1130,6 +1130,35 @@
     .pick-summary-pts  { font-weight: 800; font-size: 13px; color: var(--gold); font-variant-numeric: tabular-nums; }
     .pick-summary-form { font-size: 10px; color: var(--text-muted); letter-spacing: 1px; }
 
+    /* ── Click-to-expand breakdown ── */
+    .leaderboard-row { flex-wrap: wrap; cursor: pointer; }
+    .row-expand-arrow {
+      font-size: 10px; color: var(--text-muted);
+      transition: transform 0.2s; margin-left: 4px; flex-shrink: 0;
+    }
+    .leaderboard-row.expanded .row-expand-arrow { transform: rotate(180deg); }
+    .row-breakdown {
+      display: none; width: 100%; flex-basis: 100%;
+      padding: 6px 14px 10px 54px;
+      border-top: 1px solid var(--border); margin-top: 4px;
+    }
+    .leaderboard-row.expanded .row-breakdown { display: block; }
+    .bd-row {
+      display: flex; gap: 8px; align-items: center;
+      font-size: 10px; padding: 2px 0;
+    }
+    .bd-opp   { flex: 1; color: var(--text-secondary); }
+    .bd-score { color: var(--text-muted); }
+    .bd-outcome { font-weight: 700; }
+    .bd-outcome.w { color: var(--positive); }
+    .bd-outcome.l { color: var(--negative); }
+    .bd-outcome.d { color: var(--gold); }
+    .bd-pts { font-weight: 800; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+    .bd-pts.pos  { color: var(--positive); }
+    .bd-pts.neg  { color: var(--negative); }
+    .bd-pts.zero { color: var(--text-muted); }
+    .bd-empty { color: var(--text-muted); font-size: 10px; }
+
     /* Scrollbar hidden globally */
     ::-webkit-scrollbar { display: none; }
 
@@ -2091,6 +2120,7 @@
                 ${liveBadge}
                 <span class="row-name-sep">·</span>
                 <span class="row-country">${flagEmoji(entry.countryCode)} ${entry.country}${groupLabel}</span>
+                <span class="row-expand-arrow">▾</span>
               </div>
             </div>
             <div class="row-bar-section">
@@ -2100,11 +2130,48 @@
               <div class="row-stats-line">${record}</div>
             </div>
             <div class="row-points-section">
-              <div class="row-points">${entry.points}<span style="font-size:11px;font-weight:400;color:var(--text-muted);margin-left:2px">pts</span></div>
+              <div class="row-points"><span class="pts-num" data-v="${entry.points}">0</span><span style="font-size:11px;font-weight:400;color:var(--text-muted);margin-left:2px">pts</span></div>
               ${todayLine}
             </div>
+            ${(function() {
+              const mbd = state.matches
+                .filter(function(m) {
+                  return (m.status === "completed" || m.status === "live") &&
+                    ((m.homeTeam && m.homeTeam.name === entry.country) ||
+                     (m.awayTeam && m.awayTeam.name === entry.country));
+                })
+                .map(function(m) {
+                  const isH  = m.homeTeam && m.homeTeam.name === entry.country;
+                  const opp  = isH ? (m.awayTeam ? m.awayTeam.name : "TBD") : (m.homeTeam ? m.homeTeam.name : "TBD");
+                  const res  = calculateMatchPoints(m);
+                  const myP  = isH ? res.homePoints : res.awayPoints;
+                  const myS  = isH ? (m.homeScore || 0) : (m.awayScore || 0);
+                  const oppS = isH ? (m.awayScore || 0) : (m.homeScore || 0);
+                  const out  = myS > oppS ? "W" : myS < oppS ? "L" : "D";
+                  const cls  = myP > 0 ? "pos" : myP < 0 ? "neg" : "zero";
+                  return `<div class="bd-row"><span class="bd-opp">vs ${opp}</span><span class="bd-score">${myS}–${oppS} <span class="bd-outcome ${out.toLowerCase()}">${out}</span></span><span class="bd-pts ${cls}">${myP > 0 ? "+" : ""}${myP}</span></div>`;
+                }).join("");
+              return `<div class="row-breakdown">${mbd || '<span class="bd-empty">No matches played yet</span>'}</div>`;
+            })()}
           </div>`;
       }).join("");
+
+      // Animated counters (first load only)
+      if (!state._countersAnimated) {
+        state._countersAnimated = true;
+        list.querySelectorAll(".pts-num").forEach(function(el) {
+          animateValue(el, 0, parseInt(el.dataset.v, 10) || 0, 900);
+        });
+      }
+
+      // Click-to-expand toggle (bind once)
+      if (!list._expandBound) {
+        list._expandBound = true;
+        list.addEventListener("click", function(e) {
+          const row = e.target.closest(".leaderboard-row");
+          if (row) row.classList.toggle("expanded");
+        });
+      }
     }
 
     // ============================================================
@@ -2324,7 +2391,7 @@
         }
       }
 
-      const sorted = Object.values(scorers).sort((a, b) => b.goals - a.goals).slice(0, 12);
+      const sorted = Object.values(scorers).sort((a, b) => b.goals - a.goals);
 
       if (sorted.length === 0) {
         list.innerHTML = `<div style="padding:12px;color:var(--text-muted);font-size:11px;text-align:center;">No goals recorded yet</div>`;
@@ -2532,6 +2599,23 @@
     }
 
     // ============================================================
+    // ANIMATED COUNTER
+    // Counts a number from `from` to `to` over `duration` ms.
+    // Uses ease-out cubic for a natural deceleration feel.
+    // ============================================================
+    function animateValue(el, from, to, duration) {
+      if (from === to) { el.textContent = to; return; }
+      const start = performance.now();
+      function tick(now) {
+        const t = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - t, 3);
+        el.textContent = Math.round(from + (to - from) * eased);
+        if (t < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // ============================================================
     // MOBILE TAB SWITCHING
     // ============================================================
     document.querySelectorAll(".mob-tab").forEach(function(btn) {
@@ -2571,16 +2655,20 @@
         return b.points !== a.points ? b.points - a.points : a.name.localeCompare(b.name);
       });
 
+      const maxPts = entries.length > 0 && entries[0].points > 0 ? entries[0].points : 1;
+
       let rank = 1;
       el.innerHTML = entries.map(function(e, i) {
         if (i > 0 && e.points < entries[i - 1].points) rank = i + 1;
-        const isTop3 = rank <= 3;
-        const medal  = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : null;
-        const rankEl = medal
+        const isTop3  = rank <= 3;
+        const medal   = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : null;
+        const rankEl  = medal
           ? `<div class="mob-lb-rank">${medal}</div>`
           : `<div class="mob-lb-rank"><span class="mob-lb-rank-num">${rank}</span></div>`;
+        const barPct  = Math.max(Math.round((e.points / maxPts) * 100), e.points > 0 ? 2 : 0);
+        const barClr  = rank === 1 ? "var(--gold)" : rank <= 3 ? "var(--scarlet)" : "var(--text-muted)";
         return `
-          <div class="mob-lb-row${isTop3 ? " top3" : ""}">
+          <div class="mob-lb-row${isTop3 ? " top3" : ""}" style="position:relative;overflow:hidden">
             ${rankEl}
             ${flagImg(e.countryCode, 28, 21)}
             <div class="mob-lb-info">
@@ -2588,6 +2676,9 @@
               <div class="mob-lb-country">${e.country}</div>
             </div>
             <div class="mob-lb-pts">${e.points}</div>
+            <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--border)">
+              <div style="height:100%;width:${barPct}%;background:${barClr};transition:width 0.8s ease"></div>
+            </div>
           </div>`;
       }).join("");
     }
@@ -2739,7 +2830,7 @@
         });
       });
 
-      const sorted = Object.values(scorers).sort(function(a, b) { return b.goals - a.goals; }).slice(0, 8);
+      const sorted = Object.values(scorers).sort(function(a, b) { return b.goals - a.goals; });
       let bootRank = 1;
       const bootRows = sorted.length ? sorted.map(function(s, i) {
         if (i > 0 && s.goals < sorted[i - 1].goals) bootRank = i + 1;
