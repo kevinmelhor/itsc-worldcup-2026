@@ -1159,6 +1159,46 @@
     .bd-pts.zero { color: var(--text-muted); }
     .bd-empty { color: var(--text-muted); font-size: 10px; }
 
+    /* ============================================================
+       TOURNAMENT BRACKET (desktop — replaces group standings panel
+       automatically after KNOCKOUT_START_DATE)
+    ============================================================ */
+    .bracket-round { margin-bottom: 14px; }
+    .bracket-round-title {
+      font-size: 10px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 1.5px; color: var(--scarlet);
+      padding: 2px 4px 6px; border-bottom: 1px solid var(--border);
+      margin-bottom: 4px;
+    }
+    .bracket-match {
+      display: flex; align-items: stretch;
+      background: var(--bg-panel-alt); border-radius: 6px;
+      border: 1px solid var(--border); margin-bottom: 4px;
+      overflow: hidden; font-size: 11px;
+    }
+    .bracket-match.is-live  { border-color: rgba(0,230,118,0.35); }
+    .bracket-match.is-final { border-color: rgba(255,215,0,0.35); }
+    .bracket-side {
+      flex: 1; display: flex; align-items: center; gap: 5px;
+      padding: 5px 7px; min-width: 0;
+    }
+    .bracket-side.is-pick  { background: rgba(200,16,46,0.09); }
+    .bracket-side.winner   { background: rgba(0,200,83,0.07); }
+    .bracket-score {
+      display: flex; align-items: center; justify-content: center;
+      gap: 3px; padding: 0 8px; font-weight: 900; font-size: 13px;
+      color: var(--text-primary); background: rgba(0,0,0,0.18);
+      font-variant-numeric: tabular-nums; white-space: nowrap; flex-shrink: 0;
+    }
+    .bracket-score.is-live { color: var(--live-green); }
+    .bracket-score.tbd     { font-size: 10px; color: var(--text-muted); font-weight: 500; }
+    .bracket-team-name {
+      font-weight: 600; white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; font-size: 11px;
+    }
+    .bracket-team-name.is-pick { color: #ff8fa3; }
+    .bracket-tbd { color: var(--text-muted); font-style: italic; }
+
     /* Scrollbar hidden globally */
     ::-webkit-scrollbar { display: none; }
 
@@ -1368,6 +1408,36 @@
       .mob-pick-country { font-size: 13px; font-weight: 700; }
       .mob-pick-staff   { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
       .mob-pick-pts { font-size: 16px; font-weight: 800; color: var(--gold); flex-shrink: 0; }
+
+      /* ── Mobile Bracket ── */
+      .mob-bracket-round { margin-bottom: 14px; }
+      .mob-bracket-title {
+        font-size: 11px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 1px; color: var(--scarlet); margin: 0 0 6px;
+      }
+      .mob-bracket-match {
+        background: var(--bg-panel); border-radius: var(--radius-md);
+        border: 1px solid var(--border); overflow: hidden; margin-bottom: 6px;
+      }
+      .mob-bracket-match.is-live { border-color: rgba(0,230,118,0.4); }
+      .mob-bracket-match.is-final { border-color: rgba(255,215,0,0.35); }
+      .mob-bracket-row {
+        display: flex; align-items: center; gap: 8px;
+        padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 12px;
+      }
+      .mob-bracket-row:last-child { border-bottom: none; }
+      .mob-bracket-row.is-pick { background: rgba(200,16,46,0.07); }
+      .mob-bracket-row.winner  { background: rgba(0,200,83,0.05); }
+      .mob-bracket-row-name {
+        flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .mob-bracket-row-name.is-pick { color: #ff8fa3; }
+      .mob-bracket-row-score {
+        font-weight: 800; font-variant-numeric: tabular-nums;
+        color: var(--text-primary); flex-shrink: 0; min-width: 20px; text-align: right;
+      }
+      .mob-bracket-row-score.is-live { color: var(--live-green); }
+      .mob-bracket-row-score.tbd { color: var(--text-muted); font-weight: 400; font-size: 10px; }
     }
   </style>
 </head>
@@ -1425,8 +1495,8 @@
 
         <div class="panel" id="groups-panel">
           <div class="panel-header">
-            <span class="panel-title">Group Standings</span>
-            <span class="panel-subtitle">Staff picks in red</span>
+            <span class="panel-title" id="groups-panel-title">Group Standings</span>
+            <span class="panel-subtitle" id="groups-panel-subtitle">Staff picks in red</span>
           </div>
           <div id="groups-scroll">
             <div id="groups-list"></div>
@@ -1548,6 +1618,34 @@
 
     const REFRESH_INTERVAL_MS  = 60 * 1000;
     const LIVE_TICK_INTERVAL_MS = 15000; // Mock mode demo only
+
+    // ============================================================
+    // KNOCKOUT PHASE SWITCH
+    // After KNOCKOUT_START_DATE the dashboard automatically replaces
+    // the Group Standings panel with a Tournament Bracket panel.
+    // Group stage ends July 2 2026; bracket view starts July 3.
+    // ============================================================
+    const KNOCKOUT_START_DATE = new Date("2026-07-03T00:00:00");
+
+    function isKnockoutPhase() {
+      return new Date() >= KNOCKOUT_START_DATE;
+    }
+
+    // Canonical round order for sorting bracket sections
+    const KNOCKOUT_ROUND_ORDER = [
+      "Round of 32", "Round of 16", "Quarter-finals",
+      "Semi-finals", "Third Place Play-off", "Third Place",
+      "Final",
+    ];
+
+    function getRoundSortKey(name) {
+      if (!name) return 99;
+      const n = name.toLowerCase();
+      for (let i = 0; i < KNOCKOUT_ROUND_ORDER.length; i++) {
+        if (n.includes(KNOCKOUT_ROUND_ORDER[i].toLowerCase())) return i;
+      }
+      return 99;
+    }
 
     // ============================================================
     // FIFA COUNTRY CODE TO FLAG CODE MAPPING
@@ -1721,10 +1819,13 @@
       const homeCode   = m.home_team?.country_code || "";
       const awayCode   = m.away_team?.country_code || "";
       const groupLetter = (m.group?.name || "").replace("Group ", "").trim();
+      // Knockout round name (e.g. "Round of 16", "Quarter-finals", "Final")
+      const roundName   = m.stage?.name || m.round?.name || "";
 
       return {
         id:        m.id,
         group:     groupLetter,
+        round:     roundName,
         matchday:  m.round_number || 1,
         status,
         rawStatus: m.status,
@@ -1758,7 +1859,13 @@
 
       let type;
       if (incType === "goal") {
-        type = (incClass === "own_goal" || incClass === "own goal") ? "own_goal" : "goal";
+        if (incClass.includes("shootout")) {
+          type = "shootout_goal"; // penalty shootout — no points awarded
+        } else if (incClass === "own_goal" || incClass === "own goal") {
+          type = "own_goal";
+        } else {
+          type = "goal";
+        }
       } else if (incType === "card") {
         if (incClass === "red" || incClass === "red_card" || incClass === "red card") {
           type = "red_card";
@@ -2304,6 +2411,18 @@
     // Displays all group tables from the API with staff picks highlighted.
     // ============================================================
     function renderGroupStandings() {
+      // Update panel header to reflect current phase
+      const titleEl    = document.getElementById("groups-panel-title");
+      const subtitleEl = document.getElementById("groups-panel-subtitle");
+      if (isKnockoutPhase()) {
+        if (titleEl)    titleEl.textContent    = "Tournament Bracket";
+        if (subtitleEl) subtitleEl.textContent = "Knockout stage";
+        renderKnockoutBracket();
+        return;
+      }
+      if (titleEl)    titleEl.textContent    = "Group Standings";
+      if (subtitleEl) subtitleEl.textContent = "Staff picks in red";
+
       const container = document.getElementById("groups-list");
       const standings = state.groupStandings;
 
@@ -2360,6 +2479,88 @@
               <span style="text-align:right">Pts</span>
             </div>
             ${rowsHtml}
+          </div>`;
+      }).join("");
+    }
+
+    // ============================================================
+    // RENDER: KNOCKOUT BRACKET (desktop)
+    // Shows knockout matches grouped by round, with staff picks
+    // highlighted and winner sides tinted green.
+    // Activated automatically by renderGroupStandings() after
+    // KNOCKOUT_START_DATE.
+    // ============================================================
+    function renderKnockoutBracket() {
+      const container = document.getElementById("groups-list");
+
+      // Knockout matches have no group letter (group === "")
+      const knockoutMatches = state.matches.filter(m => !m.group);
+
+      if (!knockoutMatches.length) {
+        container.innerHTML = `
+          <div style="padding:28px;text-align:center;color:var(--text-muted);font-size:12px;">
+            <div style="font-size:26px;margin-bottom:8px">🏆</div>
+            <div style="font-weight:600;color:var(--text-secondary);margin-bottom:4px">Knockout Stage</div>
+            <div>Match schedule not yet available</div>
+          </div>`;
+        return;
+      }
+
+      // Group by round name
+      const rounds = {};
+      for (const m of knockoutMatches) {
+        const key = m.round || "Round";
+        if (!rounds[key]) rounds[key] = [];
+        rounds[key].push(m);
+      }
+
+      const sortedRoundNames = Object.keys(rounds).sort((a, b) => getRoundSortKey(a) - getRoundSortKey(b));
+      const pickedCountries  = new Set(state.staffPicks.map(p => p.country));
+
+      container.innerHTML = sortedRoundNames.map(roundName => {
+        const isFinalRound = roundName.toLowerCase().includes("final");
+        const matchesHtml  = rounds[roundName].map(m => {
+          const isLive      = m.status === "live";
+          const isCompleted = m.status === "completed";
+          const hasScore    = isLive || isCompleted;
+
+          const hName = m.homeTeam?.name || "TBD";
+          const aName = m.awayTeam?.name || "TBD";
+          const hFlag = m.homeTeam?.flagCode ? flagImg(m.homeTeam.flagCode, 18, 13) : "";
+          const aFlag = m.awayTeam?.flagCode ? flagImg(m.awayTeam.flagCode, 18, 13) : "";
+          const hPick = pickedCountries.has(hName);
+          const aPick = pickedCountries.has(aName);
+          const hTbd  = hName === "TBD";
+          const aTbd  = aName === "TBD";
+
+          let hWin = false, aWin = false;
+          if (isCompleted) {
+            const hs = m.homeScore || 0, as = m.awayScore || 0;
+            hWin = hs > as; aWin = as > hs;
+          }
+
+          const scoreHtml = hasScore
+            ? `<div class="bracket-score${isLive ? " is-live" : ""}">${m.homeScore ?? 0}<span style="color:var(--text-muted);font-size:10px;margin:0 2px">:</span>${m.awayScore ?? 0}</div>`
+            : `<div class="bracket-score tbd">${formatKickoff(m.datetime)}</div>`;
+
+          return `
+            <div class="bracket-match${isLive ? " is-live" : ""}${isFinalRound ? " is-final" : ""}">
+              <div class="bracket-side${hPick ? " is-pick" : ""}${hWin ? " winner" : ""}">
+                ${hFlag}
+                <span class="bracket-team-name${hPick ? " is-pick" : ""}${hTbd ? " bracket-tbd" : ""}">${hName}</span>
+              </div>
+              ${scoreHtml}
+              <div class="bracket-side${aPick ? " is-pick" : ""}${aWin ? " winner" : ""}">
+                ${aFlag}
+                <span class="bracket-team-name${aPick ? " is-pick" : ""}${aTbd ? " bracket-tbd" : ""}">${aName}</span>
+              </div>
+            </div>`;
+        }).join("");
+
+        return `
+          <div class="bracket-round">
+            <div class="bracket-round-title">${roundName}</div>
+            ${matchesHtml}
           </div>`;
       }).join("");
     }
@@ -2635,6 +2836,17 @@
       renderMobileMatches();
       renderMobileGroups();
       renderMobileMore();
+
+      // Swap "Groups" tab to "Bracket" when in knockout phase
+      const groupsTab = document.querySelector('[data-panel="groups"]');
+      if (groupsTab) {
+        const spans = groupsTab.querySelectorAll("span");
+        if (spans.length >= 2) {
+          spans[0].textContent = isKnockoutPhase() ? "🏆" : "🌍";
+          spans[1].textContent = isKnockoutPhase() ? "Bracket" : "Groups";
+        }
+      }
+
       const dayEl = document.getElementById("mob-day");
       if (dayEl) dayEl.textContent = getTournamentDay();
       const upEl = document.getElementById("mob-updated");
@@ -2752,11 +2964,17 @@
     }
 
     // ============================================================
-    // MOBILE RENDER: GROUP STANDINGS
+    // MOBILE RENDER: GROUP STANDINGS / BRACKET
+    // Switches to bracket view automatically after KNOCKOUT_START_DATE
     // ============================================================
     function renderMobileGroups() {
       const el = document.getElementById("mob-groups");
       if (!el) return;
+
+      if (isKnockoutPhase()) {
+        renderMobileKnockoutBracket(el);
+        return;
+      }
 
       const standings = state.groupStandings;
       if (!standings || !standings.length) {
@@ -2800,6 +3018,76 @@
               <span>W</span><span>D</span><span>L</span><span>Pts</span>
             </div>
             ${rowsHtml}
+          </div>`;
+      }).join("");
+    }
+
+    // ============================================================
+    // MOBILE RENDER: KNOCKOUT BRACKET
+    // Called by renderMobileGroups() when in knockout phase.
+    // ============================================================
+    function renderMobileKnockoutBracket(el) {
+      const knockoutMatches = state.matches.filter(m => !m.group);
+
+      if (!knockoutMatches.length) {
+        el.innerHTML = `<div class="mob-no-matches">Knockout stage schedule coming soon</div>`;
+        return;
+      }
+
+      const rounds = {};
+      for (const m of knockoutMatches) {
+        const key = m.round || "Round";
+        if (!rounds[key]) rounds[key] = [];
+        rounds[key].push(m);
+      }
+
+      const sortedRoundNames = Object.keys(rounds).sort(function(a, b) { return getRoundSortKey(a) - getRoundSortKey(b); });
+      const pickedCountries  = new Set(state.staffPicks.map(function(p) { return p.country; }));
+
+      el.innerHTML = sortedRoundNames.map(function(roundName) {
+        const isFinalRound = roundName.toLowerCase().includes("final");
+        const matchesHtml  = rounds[roundName].map(function(m) {
+          const isLive      = m.status === "live";
+          const isCompleted = m.status === "completed";
+          const hasScore    = isLive || isCompleted;
+
+          const hName = (m.homeTeam && m.homeTeam.name) || "TBD";
+          const aName = (m.awayTeam && m.awayTeam.name) || "TBD";
+          const hFlag = (m.homeTeam && m.homeTeam.flagCode) ? flagImg(m.homeTeam.flagCode, 20, 15) : "";
+          const aFlag = (m.awayTeam && m.awayTeam.flagCode) ? flagImg(m.awayTeam.flagCode, 20, 15) : "";
+          const hPick = pickedCountries.has(hName);
+          const aPick = pickedCountries.has(aName);
+
+          let hWin = false, aWin = false;
+          if (isCompleted) {
+            const hs = m.homeScore || 0, as = m.awayScore || 0;
+            hWin = hs > as; aWin = as > hs;
+          }
+
+          const hScore = hasScore ? (m.homeScore != null ? m.homeScore : 0) : "";
+          const aScore = hasScore ? (m.awayScore != null ? m.awayScore : 0) : "";
+          const scoreClass = !hasScore ? " tbd" : isLive ? " is-live" : "";
+          const timeLabel = !hasScore ? formatKickoff(m.datetime) : "";
+
+          return `
+            <div class="mob-bracket-match${isLive ? " is-live" : ""}${isFinalRound ? " is-final" : ""}">
+              <div class="mob-bracket-row${hPick ? " is-pick" : ""}${hWin ? " winner" : ""}">
+                ${hFlag}
+                <span class="mob-bracket-row-name${hPick ? " is-pick" : ""}">${hName}</span>
+                <span class="mob-bracket-row-score${scoreClass}">${hasScore ? hScore : timeLabel}</span>
+              </div>
+              <div class="mob-bracket-row${aPick ? " is-pick" : ""}${aWin ? " winner" : ""}">
+                ${aFlag}
+                <span class="mob-bracket-row-name${aPick ? " is-pick" : ""}">${aName}</span>
+                <span class="mob-bracket-row-score${scoreClass}">${hasScore ? aScore : ""}</span>
+              </div>
+            </div>`;
+        }).join("");
+
+        return `
+          <div class="mob-bracket-round">
+            <div class="mob-bracket-title">${roundName}</div>
+            ${matchesHtml}
           </div>`;
       }).join("");
     }
@@ -2893,6 +3181,9 @@
     // Pauses briefly at the top and bottom before reversing.
     // ============================================================
     function startGroupScroll() {
+      // No auto-scroll needed during knockout bracket view
+      if (isKnockoutPhase()) return;
+
       const el = document.getElementById("groups-scroll");
       if (!el) return;
 
