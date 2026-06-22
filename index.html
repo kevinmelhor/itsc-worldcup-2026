@@ -2113,6 +2113,7 @@
         const url = `${API_BASE}/fifa/worldcup/v1/matches?per_page=100` +
                     (cursor ? `&cursor=${cursor}` : "");
         const res  = await fetch(url, { headers });
+        if (!res.ok) throw new Error(`Matches API error: ${res.status}`);
         const data = await res.json();
         all.push(...(data.data || []));
         cursor = data.meta?.next_cursor || null;
@@ -2136,6 +2137,7 @@
         do {
           const cursorQs = cursor ? `&cursor=${cursor}` : "";
           const res  = await fetch(`${API_BASE}/fifa/worldcup/v1/match_events?${baseQs}&per_page=100${cursorQs}`, { headers });
+          if (!res.ok) throw new Error(`Events API error: ${res.status}`);
           const data = await res.json();
           for (const e of (data.data || [])) {
             if (!eventsMap[e.match_id]) eventsMap[e.match_id] = [];
@@ -2187,33 +2189,44 @@
           fetchAllMatchesFromAPI(headers),
         ]);
 
-        state.groupInfo      = gResult.groupInfo;
-        state.groupStandings = gResult.standings;
-        state.matches = rawMatches.map(normalizeMatch);
+        // Guard: if API returned no matches (auth error, rate limit, etc.),
+        // keep the previous state rather than wiping the leaderboard to zeros.
+        if (!rawMatches.length) {
+          console.warn("API returned 0 matches — keeping previous data");
+          return;
+        }
+
+        // Build everything into local variables first.
+        // State is only updated at the very end so a mid-fetch failure
+        // leaves the displayed leaderboard untouched.
+        const newMatches = rawMatches.map(normalizeMatch);
 
         // Events for completed and live matches only
-        const activeIds = state.matches
+        const activeIds = newMatches
           .filter(m => m.status === "completed" || m.status === "live")
           .map(m => m.id);
         const eventsMap = await fetchMatchEventsFromAPI(activeIds, headers);
 
         // Attach normalized events to each match
-        state.matches.forEach(m => {
+        newMatches.forEach(m => {
           m.events = (eventsMap[m.id] || []).map(e => normalizeEvent(e, m));
         });
 
-        // Calculate country points from match results and events
-        state.countryPoints = calculateCountryPoints(state.matches);
+        // Calculate points and build leaderboard from fresh data
+        const newCountryPoints = calculateCountryPoints(newMatches);
+        const newLeaderboard   = buildLeaderboard(STAFF_PICKS, newCountryPoints);
 
-        // Staff picks come from data.js (real staff data)
-        state.staffPicks = STAFF_PICKS;
-
-        // Build the leaderboard
-        state.leaderboard = buildLeaderboard(STAFF_PICKS, state.countryPoints);
+        // All steps succeeded — update state atomically
+        state.groupInfo      = gResult.groupInfo;
+        state.groupStandings = gResult.standings;
+        state.matches        = newMatches;
+        state.countryPoints  = newCountryPoints;
+        state.staffPicks     = STAFF_PICKS;
+        state.leaderboard    = newLeaderboard;
 
       } catch (err) {
         console.error("API fetch failed:", err);
-        // Keep showing whatever state was last loaded
+        // Keep showing whatever state was last successfully loaded
       }
     }
 
