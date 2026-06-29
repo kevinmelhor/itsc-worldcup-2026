@@ -425,7 +425,10 @@
       font-weight: 700;
       color: var(--text-primary);
       white-space: nowrap;
-      flex-shrink: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+      flex-shrink: 1;
     }
 
     .row-name-sep {
@@ -553,24 +556,23 @@
     }
 
     .boot-row {
-      display: grid;
-      grid-template-columns: 22px 28px 1fr 28px;
+      display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 4px 4px;
+      gap: 7px;
+      padding: 5px 4px;
       border-radius: 4px;
       font-size: 12px;
       border-bottom: 1px solid var(--border);
+      min-width: 0;
     }
 
     .boot-row:last-child { border-bottom: none; }
 
     .boot-rank {
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-align: center;
+      font-size: 12px; flex-shrink: 0;
+      min-width: 22px; text-align: center;
     }
+    .boot-flag { flex-shrink: 0; display: flex; align-items: center; }
 
     .boot-player {
       font-weight: 600;
@@ -578,14 +580,17 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      flex: 1;
+      min-width: 0;
     }
 
     .boot-goals {
       font-weight: 800;
       font-size: 13px;
       color: var(--gold);
-      text-align: right;
       font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+      margin-left: 4px;
     }
 
     /* ============================================================
@@ -1288,11 +1293,61 @@
     .bk-event-team  { color: var(--text-muted); font-size: 9px; flex-shrink: 0; }
     .bk-no-events   { color: var(--text-muted); font-style: italic; }
 
+    /* ── Round selector tabs ── */
+    #bracket-round-tabs {
+      display: flex; gap: 4px; padding: 6px 12px 8px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,0.12); overflow-x: auto; flex-shrink: 0;
+    }
+    .bk-tab {
+      padding: 4px 11px; border-radius: 20px; font-size: 9px;
+      font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px;
+      border: 1px solid var(--border); color: var(--text-muted);
+      background: transparent; cursor: pointer; white-space: nowrap;
+      transition: all 0.18s; flex-shrink: 0;
+    }
+    .bk-tab:hover { border-color: rgba(255,255,255,0.18); color: var(--text-secondary); }
+    .bk-tab.done  { border-color: rgba(0,200,83,0.3); color: rgba(0,200,83,0.75); }
+    .bk-tab.live  { border-color: rgba(0,230,118,0.5); color: var(--live-green); }
+    .bk-tab.active {
+      background: var(--gold); border-color: var(--gold);
+      color: #000; box-shadow: 0 0 10px rgba(255,215,0,0.25);
+    }
+    .bk-tab.done.active  { background: var(--positive); border-color: var(--positive); color: #000; }
+    .bk-tab.live.active  { background: var(--live-green); border-color: var(--live-green); color: #000; }
+
+    /* ── Eliminated leaderboard rows ── */
+    .leaderboard-row.elim-row { opacity: 0.52; }
+    .leaderboard-row.elim-row .row-name {
+      text-decoration: line-through;
+      text-decoration-color: rgba(255,23,68,0.55);
+      color: var(--text-muted);
+    }
+    .leaderboard-row.elim-row .row-bar-fill { filter: saturate(0.2); opacity: 0.5; }
+    .leaderboard-row.elim-row .row-bar-section { opacity: 0.6; }
+
+    /* ── Winner gradient on bracket team row ── */
+    .bk-team.winner {
+      background: linear-gradient(90deg, rgba(0,200,83,0.12) 0%, transparent 80%);
+    }
+
     /* ============================================================
        RESPONSIVE BREAKPOINTS
     ============================================================ */
+    /* Medium desktop (1200px – 1599px) */
+    @media (min-width: 1200px) and (max-width: 1599px) {
+      #main { grid-template-columns: 44fr 56fr; }
+      .leaderboard-row { grid-template-columns: 38px 1fr 130px 95px; }
+      .row-country { display: none; }
+      .row-name-sep { display: none; }
+      .stage-badge { display: none; }
+      .row-name { font-size: 15px; }
+      .row-points { font-size: 17px; }
+    }
+
     /* TV / Large Display (≥ 1600px) */
     @media (min-width: 1600px) {
+      #main { grid-template-columns: 40fr 60fr; }
       .row-name     { font-size: 19px; }
       .row-points   { font-size: 23px; }
       #current-time { font-size: 38px; }
@@ -1300,16 +1355,21 @@
       .bk-team-name { font-size: 13px; }
       .bk-team-score { font-size: 17px; }
       .bk-team-staff { font-size: 10px; }
-      .leaderboard-row { grid-template-columns: 48px 1fr 200px 120px; }
+      .leaderboard-row { grid-template-columns: 48px 1fr 180px 120px; }
+      .row-country { display: none; }
+      .row-name-sep { display: none; }
     }
 
     /* Laptop (769px – 1199px) */
     @media (min-width: 769px) and (max-width: 1199px) {
       #main { grid-template-columns: 42fr 58fr; }
-      .leaderboard-row { grid-template-columns: 36px 1fr 130px 90px; }
+      .leaderboard-row { grid-template-columns: 36px 1fr 110px 85px; }
       .row-name     { font-size: 14px; }
       .row-points   { font-size: 16px; }
       .row-bar-section { padding: 0 8px; }
+      .row-country { display: none; }
+      .row-name-sep { display: none; }
+      .stage-badge { display: none; }
       #current-time { font-size: 26px; }
       .header-title h1 { font-size: 17px; }
       .bk-match-grid { grid-template-columns: 1fr; }
@@ -1541,6 +1601,8 @@
       }
       .mob-bracket-title.active { color: var(--gold); }
       .mob-bracket-round.active-round .mob-bracket-match { border-color: rgba(255,255,255,0.1); }
+      .mob-bracket-row-score.winner { color: var(--positive); font-weight: 900; }
+      .mob-bracket-row.winner { background: linear-gradient(90deg, rgba(0,200,83,0.1) 0%, transparent 80%); }
       .mob-bracket-match {
         background: var(--bg-panel); border-radius: var(--radius-md);
         border: 1px solid var(--border); overflow: hidden; margin-bottom: 6px;
@@ -1627,6 +1689,7 @@
             <span class="panel-title">🏆 Tournament Bracket</span>
             <span class="panel-subtitle" id="bracket-panel-subtitle">Knockout Stage</span>
           </div>
+          <div id="bracket-round-tabs"></div>
           <div id="bracket-scroll">
             <div id="bracket-list"></div>
           </div>
@@ -1763,14 +1826,15 @@
     // All app state lives here in memory. No localStorage used.
     // ============================================================
     const state = {
-      leaderboard:    [],
-      matches:        [],
-      countryPoints:  {},
-      staffPicks:     [],
-      groupInfo:      {},  // country name -> group letter (e.g. "A")
-      groupStandings: [], // raw standing rows from API
-      liveMinute:     67, // Mock mode only
-      lastUpdated:    new Date(),
+      leaderboard:          [],
+      matches:              [],
+      countryPoints:        {},
+      staffPicks:           [],
+      groupInfo:            {},  // country name -> group letter (e.g. "A")
+      groupStandings:       [], // raw standing rows from API
+      liveMinute:           67, // Mock mode only
+      lastUpdated:          new Date(),
+      selectedBracketRound: null, // null = auto (active round)
     };
 
     // ============================================================
@@ -2462,7 +2526,7 @@
           ? `<div class="row-max-pts">max ${entry.maxPossible}</div>` : "";
 
         return `
-          <div class="leaderboard-row ${rankClass} ${liveClass}">
+          <div class="leaderboard-row ${rankClass} ${liveClass}${(!entry.isAlive && isKnockoutPhase() && entry.koStage) ? " elim-row" : ""}">
             <div class="row-rank ${rankClass}">${entry.rank}</div>
             <div class="row-identity">
               ${aliveDot}
@@ -2743,147 +2807,174 @@
     // ============================================================
     function renderKnockoutBracket() {
       const container = document.getElementById("bracket-list");
+      const tabsEl    = document.getElementById("bracket-round-tabs");
       if (!container) return;
 
-      // Knockout matches have no group letter (group === "")
       const knockoutMatches = state.matches.filter(m => !m.group);
 
       if (!knockoutMatches.length) {
+        if (tabsEl) tabsEl.innerHTML = "";
         container.innerHTML = `
-          <div style="padding:28px;text-align:center;color:var(--text-muted);font-size:12px;">
-            <div style="font-size:26px;margin-bottom:8px">🏆</div>
-            <div style="font-weight:600;color:var(--text-secondary);margin-bottom:4px">Knockout Stage</div>
+          <div style="padding:40px;text-align:center;color:var(--text-muted);font-size:12px;">
+            <div style="font-size:32px;margin-bottom:10px">🏆</div>
+            <div style="font-weight:700;color:var(--text-secondary);margin-bottom:4px;font-size:14px">Knockout Stage</div>
             <div>Match schedule not yet available</div>
           </div>`;
         return;
       }
 
-      // Group by round name
+      // Group by round, sorted earliest first
       const rounds = {};
       for (const m of knockoutMatches) {
         const key = m.round || "Round";
         if (!rounds[key]) rounds[key] = [];
         rounds[key].push(m);
       }
-
       const sortedRoundNames = Object.keys(rounds).sort((a, b) => getRoundSortKey(a) - getRoundSortKey(b));
       const pickedCountries  = new Set(state.staffPicks.map(p => p.country));
 
-      // Active round = earliest with live/scheduled matches (or final if all done)
+      // Active round = earliest with live/scheduled; fallback to last
       const activeRound = sortedRoundNames.find(r =>
         rounds[r].some(m => m.status === "live" || m.status === "scheduled")
       ) || sortedRoundNames[sortedRoundNames.length - 1];
 
-      // Helper: build the event details block for a match card
+      // Determine which round to display
+      if (!state.selectedBracketRound || !rounds[state.selectedBracketRound]) {
+        state.selectedBracketRound = activeRound;
+      }
+      const showRound = state.selectedBracketRound;
+
+      // ── Render round tabs ──────────────────────────────────────
+      if (tabsEl) {
+        tabsEl.innerHTML = sortedRoundNames.map(r => {
+          const matchList = rounds[r];
+          const allDone   = matchList.every(m => m.status === "completed");
+          const hasLive   = matchList.some(m => m.status === "live");
+          const isActive  = r === showRound;
+          const abbr      = abbreviateRound(r);
+          const count     = `${matchList.filter(m => m.status === "completed").length}/${matchList.length}`;
+          let cls = "bk-tab";
+          if (allDone) cls += " done";
+          else if (hasLive) cls += " live";
+          if (isActive) cls += " active";
+          return `<button class="${cls}" data-round="${encodeURIComponent(r)}">${abbr} <span style="opacity:0.65;font-weight:400">${count}</span></button>`;
+        }).join("");
+
+        // Bind tab click handlers (use event delegation)
+        if (!tabsEl._bound) {
+          tabsEl._bound = true;
+          tabsEl.addEventListener("click", function(e) {
+            const btn = e.target.closest(".bk-tab");
+            if (!btn) return;
+            state.selectedBracketRound = decodeURIComponent(btn.dataset.round);
+            renderKnockoutBracket();
+          });
+        }
+      }
+
+      // ── Helper: build click-to-expand events block ─────────────
       function buildBkDetails(m) {
-        const evts = m.events || [];
-        if (!evts.length) return `<div class="bk-no-events">No events recorded yet</div>`;
-        const sorted = evts.slice().sort((a, b) => a.minute - b.minute);
-        return sorted.map(e => {
-          let icon = "";
-          if (e.type === "goal")        icon = "⚽";
-          else if (e.type === "own_goal")    icon = "↩️";
-          else if (e.type === "yellow_card") icon = "🟨";
-          else if (e.type === "red_card")    icon = "🟥";
-          else return "";
-          const side = e.team === "home"
-            ? (m.homeTeam?.name || "Home")
-            : (m.awayTeam?.name || "Away");
+        const evts = (m.events || []).filter(e =>
+          ["goal","own_goal","yellow_card","red_card"].includes(e.type)
+        ).sort((a, b) => a.minute - b.minute);
+        if (!evts.length) return `<div class="bk-no-events">No events recorded</div>`;
+        return evts.map(e => {
+          const icon = e.type === "goal" ? "⚽" : e.type === "own_goal" ? "↩️"
+            : e.type === "yellow_card" ? "🟨" : "🟥";
+          const side = e.team === "home" ? (m.homeTeam?.name || "Home") : (m.awayTeam?.name || "Away");
           return `<div class="bk-event-row">
             <span class="bk-event-icon">${icon}</span>
             <span class="bk-event-time">${e.minute}'</span>
-            <span class="bk-event-player">${e.player || "Unknown"} <span style="color:var(--text-muted)">(${side})</span></span>
+            <span class="bk-event-player">${e.player || "Unknown"}</span>
+            <span class="bk-event-team">${side}</span>
           </div>`;
-        }).filter(Boolean).join("") || `<div class="bk-no-events">No scored events</div>`;
+        }).join("");
       }
 
-      // Render all rounds, oldest first
-      container.innerHTML = sortedRoundNames.map(roundName => {
-        const matchList   = rounds[roundName];
-        const isActive    = roundName === activeRound;
-        const isSingleCol = matchList.length <= 2 || roundName.toLowerCase().includes("semi") || roundName.toLowerCase().includes("final");
-        const gridClass   = isSingleCol ? "single-col" : "";
-        const completed   = matchList.filter(m => m.status === "completed").length;
-        const total       = matchList.length;
+      // ── Render selected round's matches ───────────────────────
+      const matchList   = rounds[showRound];
+      const isSingleCol = matchList.length <= 2
+        || showRound.toLowerCase().includes("semi")
+        || (showRound.toLowerCase().includes("final") && !showRound.toLowerCase().includes("semi") && !showRound.toLowerCase().includes("third"));
+      const gridClass   = isSingleCol ? "single-col" : "";
+      const isFinalRound = showRound.toLowerCase().includes("final")
+        && !showRound.toLowerCase().includes("semi")
+        && !showRound.toLowerCase().includes("third");
 
-        const matchesHtml = matchList.map(m => {
-          const isLive      = m.status === "live";
-          const isCompleted = m.status === "completed";
-          const hasScore    = isLive || isCompleted;
-          const isFinal     = roundName.toLowerCase().includes("final") && !roundName.toLowerCase().includes("semi") && !roundName.toLowerCase().includes("third");
+      const matchesHtml = matchList.map(m => {
+        const isLive      = m.status === "live";
+        const isCompleted = m.status === "completed";
+        const hasScore    = isLive || isCompleted;
 
-          const hName = m.homeTeam?.name || "TBD";
-          const aName = m.awayTeam?.name || "TBD";
-          const hFlag = m.homeTeam?.flagCode ? flagImg(m.homeTeam.flagCode, 20, 15) : "";
-          const aFlag = m.awayTeam?.flagCode ? flagImg(m.awayTeam.flagCode, 20, 15) : "";
-          const hPick = pickedCountries.has(hName);
-          const aPick = pickedCountries.has(aName);
+        const hName = m.homeTeam?.name || "TBD";
+        const aName = m.awayTeam?.name || "TBD";
+        const hFlag = m.homeTeam?.flagCode ? flagImg(m.homeTeam.flagCode, 20, 15) : "";
+        const aFlag = m.awayTeam?.flagCode ? flagImg(m.awayTeam.flagCode, 20, 15) : "";
+        const hPick = pickedCountries.has(hName);
+        const aPick = pickedCountries.has(aName);
+        const hStaff = state.staffPicks.filter(p => p.country === hName).map(p => p.name.split(" ")[0]).join(", ");
+        const aStaff = state.staffPicks.filter(p => p.country === aName).map(p => p.name.split(" ")[0]).join(", ");
 
-          // Staff pickers for each team
-          const hStaff = state.staffPicks.filter(p => p.country === hName).map(p => p.name.split(" ")[0]).join(", ");
-          const aStaff = state.staffPicks.filter(p => p.country === aName).map(p => p.name.split(" ")[0]).join(", ");
-
-          let hWin = false, aWin = false;
-          if (isCompleted || isLive) {
-            const hs = m.homeScore ?? 0, as = m.awayScore ?? 0;
-            if (isCompleted) {
-              hWin = hs > as; aWin = as > hs;
-              // Check penalties
-              if (!hWin && !aWin) {
-                const hp = m.homePenalties ?? null, ap = m.awayPenalties ?? null;
-                if (hp !== null && ap !== null) { hWin = hp > ap; aWin = ap > hp; }
-              }
-            }
+        let hWin = false, aWin = false;
+        if (isCompleted) {
+          const hs = m.homeScore ?? 0, as = m.awayScore ?? 0;
+          hWin = hs > as; aWin = as > hs;
+          if (!hWin && !aWin) {
+            const hp = m.homePenalties ?? null, ap = m.awayPenalties ?? null;
+            if (hp !== null && ap !== null) { hWin = hp > ap; aWin = ap > hp; }
           }
+        }
 
-          const hScore = hasScore ? (m.homeScore ?? 0) : null;
-          const aScore = hasScore ? (m.awayScore ?? 0) : null;
-          const hPen   = (isCompleted && m.homePenalties != null) ? ` (${m.homePenalties})` : "";
-          const aPen   = (isCompleted && m.awayPenalties != null) ? ` (${m.awayPenalties})` : "";
+        const hScore = hasScore ? (m.homeScore ?? 0) : null;
+        const aScore = hasScore ? (m.awayScore ?? 0) : null;
+        const hPen   = (isCompleted && m.homePenalties != null) ? ` (${m.homePenalties})` : "";
+        const aPen   = (isCompleted && m.awayPenalties != null) ? ` (${m.awayPenalties})` : "";
 
-          const dateStr = m.datetime
-            ? new Date(m.datetime).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-            : "";
-          const timeStr = m.datetime ? formatKickoff(m.datetime) : "";
-          const timeLabel = dateStr ? `${dateStr} · ${timeStr}` : "";
+        const dateStr  = m.datetime ? new Date(m.datetime).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
+        const timeStr  = m.datetime ? formatKickoff(m.datetime) : "";
+        const timeLabel = dateStr ? `${dateStr} · ${timeStr}` : "";
 
-          const details = buildBkDetails(m);
-
-          return `
-            <div class="bk-match${isLive ? " is-live" : ""}${isFinal ? " is-final" : ""}" onclick="this.classList.toggle('expanded')">
-              <div class="bk-match-time">
-                <span>${isLive ? "" : timeLabel}</span>
-                ${isLive ? `<span class="bk-live-badge">● LIVE</span>` : ""}
-              </div>
-              <div class="bk-team${hPick ? " is-pick" : ""}${hWin ? " winner" : ""}">
-                <span class="bk-team-flag">${hFlag}</span>
-                <div class="bk-team-info">
-                  <div class="bk-team-name${hPick ? " is-pick" : ""}">${hName === "TBD" ? "TBD" : hName}</div>
-                  ${hStaff ? `<div class="bk-team-staff">${hStaff}</div>` : ""}
-                </div>
-                <span class="bk-team-score${hWin ? " winner-score" : ""}${isLive ? " is-live" : ""}${hScore === null ? " tbd" : ""}">${hScore !== null ? hScore + hPen : "–"}</span>
-              </div>
-              <div class="bk-team${aPick ? " is-pick" : ""}${aWin ? " winner" : ""}">
-                <span class="bk-team-flag">${aFlag}</span>
-                <div class="bk-team-info">
-                  <div class="bk-team-name${aPick ? " is-pick" : ""}">${aName === "TBD" ? "TBD" : aName}</div>
-                  ${aStaff ? `<div class="bk-team-staff">${aStaff}</div>` : ""}
-                </div>
-                <span class="bk-team-score${aWin ? " winner-score" : ""}${isLive ? " is-live" : ""}${aScore === null ? " tbd" : ""}">${aScore !== null ? aScore + aPen : "–"}</span>
-              </div>
-              <div class="bk-match-details">${details}</div>
-            </div>`;
-        }).join("");
+        const resultLabel = isCompleted ? "FT" : isLive ? "" : "";
 
         return `
-          <div class="bk-round-section${isActive ? " active-round" : ""}">
-            <div class="bk-round-header">
-              <span class="bk-round-name">${roundName}</span>
-              <span class="bk-round-progress">${completed}/${total}</span>
+          <div class="bk-match${isLive ? " is-live" : ""}${isFinalRound ? " is-final" : ""}" onclick="this.classList.toggle('expanded')">
+            <div class="bk-match-time">
+              <span>${isLive ? "" : (isCompleted ? `${timeLabel}` : timeLabel)}</span>
+              <span style="display:flex;align-items:center;gap:4px">
+                ${isCompleted ? `<span style="font-size:8px;font-weight:700;color:var(--text-muted)">FT</span>` : ""}
+                ${isLive ? `<span class="bk-live-badge">● LIVE</span>` : ""}
+                <span class="bk-expand-icon">▾</span>
+              </span>
             </div>
-            <div class="bk-match-grid ${gridClass}">${matchesHtml}</div>
+            <div class="bk-team${hPick ? " is-pick" : ""}${hWin ? " winner" : ""}">
+              <span class="bk-team-flag">${hFlag}</span>
+              <div class="bk-team-info">
+                <div class="bk-team-name${hPick ? " is-pick" : ""}${hName === "TBD" ? " bk-tbd" : ""}">${hName}</div>
+                ${hStaff ? `<div class="bk-team-staff">${hStaff}</div>` : ""}
+              </div>
+              <span class="bk-team-score${hWin ? " winner-score" : ""}${isLive ? " is-live" : ""}${hScore === null ? " tbd" : ""}">${hScore !== null ? hScore + hPen : "–"}</span>
+            </div>
+            <div class="bk-team${aPick ? " is-pick" : ""}${aWin ? " winner" : ""}">
+              <span class="bk-team-flag">${aFlag}</span>
+              <div class="bk-team-info">
+                <div class="bk-team-name${aPick ? " is-pick" : ""}${aName === "TBD" ? " bk-tbd" : ""}">${aName}</div>
+                ${aStaff ? `<div class="bk-team-staff">${aStaff}</div>` : ""}
+              </div>
+              <span class="bk-team-score${aWin ? " winner-score" : ""}${isLive ? " is-live" : ""}${aScore === null ? " tbd" : ""}">${aScore !== null ? aScore + aPen : "–"}</span>
+            </div>
+            <div class="bk-match-details">${buildBkDetails(m)}</div>
           </div>`;
       }).join("");
+
+      const completed = matchList.filter(m => m.status === "completed").length;
+      container.innerHTML = `
+        <div class="bk-round-section active-round" style="margin-bottom:0">
+          <div class="bk-round-header">
+            <span class="bk-round-name">${showRound}</span>
+            <span class="bk-round-progress">${completed} / ${matchList.length} completed</span>
+          </div>
+          <div class="bk-match-grid ${gridClass}">${matchesHtml}</div>
+        </div>`;
     }
 
     // ============================================================
@@ -2929,7 +3020,7 @@
         return `
           <div class="boot-row">
             <span class="boot-rank">${medal}</span>
-            <span>${flag}</span>
+            <span class="boot-flag">${flag}</span>
             <span class="boot-player">${s.player} <span style="color:var(--text-muted);font-size:10px;font-weight:400">${s.team}</span></span>
             <span class="boot-goals">${s.goals}⚽</span>
           </div>`;
@@ -3276,7 +3367,7 @@
 
     // ============================================================
     // MOBILE RENDER: BRACKET
-    // Shows all knockout rounds on the mobile bracket tab.
+    // Tab-based round selector, matches the desktop bracket.
     // ============================================================
     function renderMobileBracket() {
       const el = document.getElementById("mob-bracket");
@@ -3295,80 +3386,118 @@
         if (!rounds[key]) rounds[key] = [];
         rounds[key].push(m);
       }
-
       const sortedRoundNames = Object.keys(rounds).sort(function(a, b) { return getRoundSortKey(a) - getRoundSortKey(b); });
       const pickedCountries  = new Set(state.staffPicks.map(function(p) { return p.country; }));
 
-      // Active round = earliest with live/scheduled
       const activeRound = sortedRoundNames.find(function(r) {
         return rounds[r].some(function(m) { return m.status === "live" || m.status === "scheduled"; });
       }) || sortedRoundNames[sortedRoundNames.length - 1];
 
-      el.innerHTML = sortedRoundNames.map(function(roundName) {
-        const matchList   = rounds[roundName];
-        const isActive    = roundName === activeRound;
-        const completed   = matchList.filter(function(m) { return m.status === "completed"; }).length;
+      // Sync with desktop selected round
+      if (!state.selectedBracketRound || !rounds[state.selectedBracketRound]) {
+        state.selectedBracketRound = activeRound;
+      }
+      const showRound = state.selectedBracketRound;
 
-        const matchesHtml = matchList.map(function(m) {
-          const isLive      = m.status === "live";
-          const isCompleted = m.status === "completed";
-          const hasScore    = isLive || isCompleted;
-          const isFinal     = roundName.toLowerCase().includes("final") && !roundName.toLowerCase().includes("semi") && !roundName.toLowerCase().includes("third");
+      // Build tabs HTML
+      const tabsHtml = sortedRoundNames.map(function(r) {
+        const matchList = rounds[r];
+        const allDone   = matchList.every(function(m) { return m.status === "completed"; });
+        const hasLive   = matchList.some(function(m) { return m.status === "live"; });
+        const isActive  = r === showRound;
+        const abbr      = abbreviateRound(r);
+        const count     = matchList.filter(function(m) { return m.status === "completed"; }).length + "/" + matchList.length;
+        var cls = "bk-tab";
+        if (allDone) cls += " done";
+        else if (hasLive) cls += " live";
+        if (isActive) cls += " active";
+        return `<button class="${cls}" data-round="${encodeURIComponent(r)}">${abbr} <span style="opacity:0.65;font-weight:400">${count}</span></button>`;
+      }).join("");
 
-          const hName = (m.homeTeam && m.homeTeam.name) || "TBD";
-          const aName = (m.awayTeam && m.awayTeam.name) || "TBD";
-          const hFlag = (m.homeTeam && m.homeTeam.flagCode) ? flagImg(m.homeTeam.flagCode, 20, 15) : "";
-          const aFlag = (m.awayTeam && m.awayTeam.flagCode) ? flagImg(m.awayTeam.flagCode, 20, 15) : "";
-          const hPick = pickedCountries.has(hName);
-          const aPick = pickedCountries.has(aName);
+      // Build matches for the selected round
+      const matchList = rounds[showRound];
+      const isFinalRound = showRound.toLowerCase().includes("final") && !showRound.toLowerCase().includes("semi") && !showRound.toLowerCase().includes("third");
+      const completed    = matchList.filter(function(m) { return m.status === "completed"; }).length;
 
-          let hWin = false, aWin = false;
-          if (isCompleted) {
-            const hs = m.homeScore || 0, as = m.awayScore || 0;
-            hWin = hs > as; aWin = as > hs;
-            if (!hWin && !aWin) {
-              const hp = m.homePenalties != null ? m.homePenalties : null;
-              const ap = m.awayPenalties != null ? m.awayPenalties : null;
-              if (hp !== null && ap !== null) { hWin = hp > ap; aWin = ap > hp; }
-            }
+      const matchesHtml = matchList.map(function(m) {
+        const isLive      = m.status === "live";
+        const isCompleted = m.status === "completed";
+        const hasScore    = isLive || isCompleted;
+        const isFinal     = isFinalRound;
+
+        const hName = (m.homeTeam && m.homeTeam.name) || "TBD";
+        const aName = (m.awayTeam && m.awayTeam.name) || "TBD";
+        const hFlag = (m.homeTeam && m.homeTeam.flagCode) ? flagImg(m.homeTeam.flagCode, 22, 16) : "";
+        const aFlag = (m.awayTeam && m.awayTeam.flagCode) ? flagImg(m.awayTeam.flagCode, 22, 16) : "";
+        const hPick = pickedCountries.has(hName);
+        const aPick = pickedCountries.has(aName);
+
+        var hWin = false, aWin = false;
+        if (isCompleted) {
+          const hs = m.homeScore || 0, as = m.awayScore || 0;
+          hWin = hs > as; aWin = as > hs;
+          if (!hWin && !aWin) {
+            const hp = m.homePenalties != null ? m.homePenalties : null;
+            const ap = m.awayPenalties != null ? m.awayPenalties : null;
+            if (hp !== null && ap !== null) { hWin = hp > ap; aWin = ap > hp; }
           }
+        }
 
-          const hScore = hasScore ? (m.homeScore != null ? m.homeScore : 0) : null;
-          const aScore = hasScore ? (m.awayScore != null ? m.awayScore : 0) : null;
-          const timeLabel = !hasScore
-            ? (m.datetime ? new Date(m.datetime).toLocaleDateString("en-US", { month: "short", day: "numeric" }) + " · " + formatKickoff(m.datetime) : "")
-            : "";
-          const hStaff = state.staffPicks.filter(function(p) { return p.country === hName; }).map(function(p) { return p.name.split(" ")[0]; }).join(", ");
-          const aStaff = state.staffPicks.filter(function(p) { return p.country === aName; }).map(function(p) { return p.name.split(" ")[0]; }).join(", ");
-
-          return `
-            <div class="mob-bracket-match${isLive ? " is-live" : ""}${isFinal ? " is-final" : ""}">
-              ${!hasScore ? `<div style="font-size:9px;color:var(--text-muted);padding:3px 8px;background:rgba(0,0,0,0.15);border-bottom:1px solid var(--border)">${timeLabel}${isLive ? '<span style="color:var(--live-green);font-weight:800;margin-left:6px">● LIVE</span>' : ''}</div>` : ""}
-              <div class="mob-bracket-row${hPick ? " is-pick" : ""}${hWin ? " winner" : ""}">
-                ${hFlag}
-                <div style="flex:1;min-width:0">
-                  <span class="mob-bracket-row-name${hPick ? " is-pick" : ""}">${hName}</span>
-                  ${hStaff ? `<div style="font-size:9px;color:var(--scarlet)">${hStaff}</div>` : ""}
-                </div>
-                <span class="mob-bracket-row-score${hScore === null ? " tbd" : isLive ? " is-live" : ""}">${hScore !== null ? hScore : (timeLabel ? "" : "–")}</span>
-              </div>
-              <div class="mob-bracket-row${aPick ? " is-pick" : ""}${aWin ? " winner" : ""}">
-                ${aFlag}
-                <div style="flex:1;min-width:0">
-                  <span class="mob-bracket-row-name${aPick ? " is-pick" : ""}">${aName}</span>
-                  ${aStaff ? `<div style="font-size:9px;color:var(--scarlet)">${aStaff}</div>` : ""}
-                </div>
-                <span class="mob-bracket-row-score${aScore === null ? " tbd" : isLive ? " is-live" : ""}">${aScore !== null ? aScore : ""}</span>
-              </div>
-            </div>`;
-        }).join("");
+        const hScore = hasScore ? (m.homeScore != null ? m.homeScore : 0) : null;
+        const aScore = hasScore ? (m.awayScore != null ? m.awayScore : 0) : null;
+        const timeLabel = m.datetime
+          ? new Date(m.datetime).toLocaleDateString("en-US", { month: "short", day: "numeric" }) + " · " + formatKickoff(m.datetime)
+          : "";
+        const hStaff = state.staffPicks.filter(function(p) { return p.country === hName; }).map(function(p) { return p.name.split(" ")[0]; }).join(", ");
+        const aStaff = state.staffPicks.filter(function(p) { return p.country === aName; }).map(function(p) { return p.name.split(" ")[0]; }).join(", ");
 
         return `
-          <div class="mob-bracket-round${isActive ? " active-round" : ""}">
-            <div class="mob-bracket-title${isActive ? " active" : ""}">${roundName} <span style="font-weight:400;opacity:0.6">${completed}/${matchList.length}</span></div>
-            ${matchesHtml}
+          <div class="mob-bracket-match${isLive ? " is-live" : ""}${isFinal ? " is-final" : ""}">
+            <div style="font-size:9px;color:var(--text-muted);padding:3px 8px;background:rgba(0,0,0,0.15);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+              <span>${isCompleted ? timeLabel : (hasScore ? timeLabel : timeLabel)}</span>
+              <span>${isCompleted ? '<span style="font-size:8px;font-weight:700;color:var(--text-muted)">FT</span>' : ""}${isLive ? '<span style="color:var(--live-green);font-weight:800">● LIVE</span>' : ""}</span>
+            </div>
+            <div class="mob-bracket-row${hPick ? " is-pick" : ""}${hWin ? " winner" : ""}">
+              ${hFlag}
+              <div style="flex:1;min-width:0">
+                <div class="mob-bracket-row-name${hPick ? " is-pick" : ""}">${hName}</div>
+                ${hStaff ? `<div style="font-size:9px;color:var(--scarlet);margin-top:1px">${hStaff}</div>` : ""}
+              </div>
+              <span class="mob-bracket-row-score${hScore === null ? " tbd" : isLive ? " is-live" : ""}${hWin ? " winner" : ""}">${hScore !== null ? hScore : "–"}</span>
+            </div>
+            <div class="mob-bracket-row${aPick ? " is-pick" : ""}${aWin ? " winner" : ""}">
+              ${aFlag}
+              <div style="flex:1;min-width:0">
+                <div class="mob-bracket-row-name${aPick ? " is-pick" : ""}">${aName}</div>
+                ${aStaff ? `<div style="font-size:9px;color:var(--scarlet);margin-top:1px">${aStaff}</div>` : ""}
+              </div>
+              <span class="mob-bracket-row-score${aScore === null ? " tbd" : isLive ? " is-live" : ""}${aWin ? " winner" : ""}">${aScore !== null ? aScore : "–"}</span>
+            </div>
           </div>`;
       }).join("");
+
+      el.innerHTML = `
+        <div style="display:flex;gap:4px;padding:10px 12px 8px;overflow-x:auto;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.1)" id="mob-bracket-tabs">
+          ${tabsHtml}
+        </div>
+        <div style="padding:8px 10px 10px">
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:6px">
+            ${showRound} · ${completed}/${matchList.length} completed
+          </div>
+          ${matchesHtml}
+        </div>`;
+
+      // Bind tab clicks
+      const mobTabsEl = el.querySelector("#mob-bracket-tabs");
+      if (mobTabsEl && !mobTabsEl._bound) {
+        mobTabsEl._bound = true;
+        mobTabsEl.addEventListener("click", function(e) {
+          const btn = e.target.closest(".bk-tab");
+          if (!btn) return;
+          state.selectedBracketRound = decodeURIComponent(btn.dataset.round);
+          renderMobileBracket();
+        });
+      }
     }
 
     // ============================================================
@@ -3460,8 +3589,8 @@
     // Pauses briefly at the top and bottom before reversing.
     // ============================================================
     function startGroupScroll() {
-      // Auto-scroll the bracket panel during knockout phase
-      const el = document.getElementById(isKnockoutPhase() ? "bracket-scroll" : "groups-scroll");
+      // Auto-scroll the leaderboard so all participants are visible
+      const el = document.getElementById("leaderboard-scroll");
       if (!el) return;
 
       const SPEED     = 0.4;   // px per frame (~24px/sec at 60fps)
