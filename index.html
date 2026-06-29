@@ -3726,9 +3726,20 @@
       const el = document.getElementById("mob-leaderboard");
       if (!el) return;
 
+      // Use state.leaderboard directly — it has isAlive, countryCode, etc. already computed
+      const lbByName = {};
+      state.leaderboard.forEach(function(e) { lbByName[e.name] = e; });
+
       const entries = state.staffPicks.map(function(p) {
+        const lb = lbByName[p.name];
         const cp = state.countryPoints[p.country] || { points: 0 };
-        return { name: p.name, country: p.country, countryCode: p.countryCode, points: cp.points };
+        return {
+          name:        p.name,
+          country:     p.country,
+          countryCode: p.countryCode,
+          points:      cp.points,
+          isAlive:     lb ? lb.isAlive : true,
+        };
       }).sort(function(a, b) {
         return b.points !== a.points ? b.points - a.points : a.name.localeCompare(b.name);
       });
