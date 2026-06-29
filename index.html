@@ -491,10 +491,12 @@
     .row-stats-line {
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 5px;
       font-size: 10px;
       color: var(--text-muted);
       white-space: nowrap;
+      overflow: hidden;
+      min-width: 0;
     }
 
     .row-record { display: flex; gap: 5px; }
@@ -1172,33 +1174,37 @@
     .pick-summary-form { font-size: 10px; color: var(--text-muted); letter-spacing: 1px; }
 
     /* ── Click-to-expand breakdown ── */
-    .leaderboard-row { flex-wrap: wrap; cursor: pointer; }
+    .leaderboard-row { cursor: pointer; }
     .row-expand-arrow {
       font-size: 10px; color: var(--text-muted);
       transition: transform 0.2s; margin-left: 4px; flex-shrink: 0;
     }
     .leaderboard-row.expanded .row-expand-arrow { transform: rotate(180deg); }
     .row-breakdown {
-      display: none; width: 100%; flex-basis: 100%;
-      padding: 6px 14px 10px 54px;
-      border-top: 1px solid var(--border); margin-top: 4px;
+      display: none; grid-column: 1 / -1;
+      padding: 4px 16px 8px 16px;
+      border-top: 1px solid var(--border);
+      background: rgba(0,0,0,0.12);
     }
     .leaderboard-row.expanded .row-breakdown { display: block; }
     .bd-row {
-      display: flex; gap: 8px; align-items: center;
-      font-size: 10px; padding: 2px 0;
+      display: flex; align-items: center;
+      gap: 0; font-size: 11px; padding: 3px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
     }
-    .bd-opp   { flex: 1; color: var(--text-secondary); }
-    .bd-score { color: var(--text-muted); }
-    .bd-outcome { font-weight: 700; }
+    .bd-row:last-child { border-bottom: none; }
+    .bd-opp   { width: 140px; flex-shrink: 0; color: var(--text-secondary); font-size: 10px; }
+    .bd-score { width: 60px; flex-shrink: 0; color: var(--text-muted); font-size: 10px; }
+    .bd-outcome { font-weight: 800; margin-left: 4px; }
     .bd-outcome.w { color: var(--positive); }
     .bd-outcome.l { color: var(--negative); }
     .bd-outcome.d { color: var(--gold); }
-    .bd-pts { font-weight: 800; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+    .bd-pts { width: 55px; flex-shrink: 0; font-weight: 800; font-size: 12px; font-variant-numeric: tabular-nums; }
     .bd-pts.pos  { color: var(--positive); }
     .bd-pts.neg  { color: var(--negative); }
     .bd-pts.zero { color: var(--text-muted); }
-    .bd-empty { color: var(--text-muted); font-size: 10px; }
+    .bd-round { font-size: 9px; color: var(--text-muted); opacity: 0.7; }
+    .bd-empty { color: var(--text-muted); font-size: 10px; padding: 4px 0; }
 
     /* ============================================================
        INTERACTIVE TOURNAMENT BRACKET
@@ -1966,8 +1972,10 @@
       const homeCode   = m.home_team?.country_code || "";
       const awayCode   = m.away_team?.country_code || "";
       const groupLetter = (m.group?.name || "").replace("Group ", "").trim();
-      // Knockout round name (e.g. "Round of 16", "Quarter-finals", "Final")
-      const roundName   = m.stage?.name || m.round?.name || "";
+      // Knockout round name — try every field the BALLDONTLIE API might use
+      const roundName   = m.stage?.name || m.round?.name ||
+                          m.stage_name  || m.round_name  ||
+                          m.tournament_round?.name || m.phase?.name || "";
 
       return {
         id:        m.id,
@@ -2152,7 +2160,6 @@
       //   2. Award the one-time round advancement bonus to the winner
       for (const m of matches) {
         if (m.status !== "completed" || m.group) continue;
-        if (!m.round) continue;
 
         const hName = m.homeTeam?.name;
         const aName = m.awayTeam?.name;
@@ -2567,8 +2574,8 @@
                   const oppS = isH ? (m.awayScore || 0) : (m.homeScore || 0);
                   const out  = myS > oppS ? "W" : myS < oppS ? "L" : "D";
                   const cls  = myP > 0 ? "pos" : myP < 0 ? "neg" : "zero";
-                  const roundLabel = m.group ? `Group ${m.group}` : (m.round || "");
-                  return `<div class="bd-row"><span class="bd-opp">vs ${opp}</span><span class="bd-score">${myS}–${oppS} <span class="bd-outcome ${out.toLowerCase()}">${out}</span></span><span class="bd-pts ${cls}">${myP > 0 ? "+" : ""}${myP}</span>${roundLabel ? `<span style="color:var(--text-muted);font-size:9px">${roundLabel}</span>` : ""}</div>`;
+                  const roundLabel = m.group ? `Group ${m.group}` : (abbreviateRound(m.round) || "");
+                  return `<div class="bd-row"><span class="bd-opp">vs ${opp}</span><span class="bd-score">${myS}–${oppS}<span class="bd-outcome ${out.toLowerCase()}"> ${out}</span></span><span class="bd-pts ${cls}">${myP > 0 ? "+" : ""}${myP} pts</span>${roundLabel ? `<span class="bd-round">${roundLabel}</span>` : ""}</div>`;
                 }).join("");
               return `<div class="row-breakdown">${mbd || '<span class="bd-empty">No matches played yet</span>'}</div>`;
             })()}
