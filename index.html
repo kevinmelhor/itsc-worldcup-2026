@@ -2869,13 +2869,16 @@
       const wrap = document.getElementById("podium-wrap");
       if (!wrap) return;
       const entries = state.leaderboard;
-      if (entries.length < 2) { wrap.innerHTML = ""; return; }
+      const top3 = entries.slice(0, 3);
+
+      // Only show podium when 1st, 2nd, and 3rd places are all distinct (no ties)
+      if (top3.length < 3 || top3[0].rank === top3[1].rank || top3[1].rank === top3[2].rank) {
+        wrap.innerHTML = "";
+        return;
+      }
 
       // Classic podium order: [2nd, 1st, 3rd]
-      const top3    = entries.slice(0, Math.min(3, entries.length));
-      const ordered = top3.length >= 3
-        ? [top3[1], top3[0], top3[2]]
-        : [null, top3[0], top3[1] || null];
+      const ordered = [top3[1], top3[0], top3[2]];
 
       const medals     = ["🥈", "🥇", "🥉"];
       const heights    = [26, 36, 18];
