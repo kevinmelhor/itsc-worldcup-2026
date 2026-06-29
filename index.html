@@ -76,9 +76,10 @@
     ============================================================ */
     #dashboard {
       display: grid;
-      grid-template-rows: 7vh 1fr;
+      grid-template-rows: 7vh 36px 1fr;
       grid-template-areas:
         "header"
+        "schedule"
         "main";
       height: 100vh;
       width: 100%;
@@ -1636,6 +1637,148 @@
       .mob-bracket-row-score.is-live { color: var(--live-green); }
       .mob-bracket-row-score.tbd { color: var(--text-muted); font-weight: 400; font-size: 10px; }
     }
+
+    /* ============================================================
+       ENGAGEMENT FEATURES — rank arrows, gap, gainer, flash,
+       schedule bar, podium, elim divider, idle TV overlay
+    ============================================================ */
+
+    /* ── Rank change arrows ── */
+    .rank-arrow {
+      font-size: 9px; font-weight: 900; display: block;
+      text-align: center; line-height: 1; margin-top: 1px;
+    }
+    .rank-arrow.up   { color: var(--positive); }
+    .rank-arrow.down { color: var(--negative); }
+
+    /* ── Gap to leader ── */
+    .row-gap {
+      font-size: 9px; color: var(--text-muted); font-variant-numeric: tabular-nums;
+      white-space: nowrap; text-align: right; line-height: 1;
+    }
+
+    /* ── Biggest-gainer badge ── */
+    .gainer-badge {
+      display: inline-flex; align-items: center;
+      font-size: 8px; font-weight: 800; letter-spacing: 0.4px;
+      background: rgba(255,140,0,0.14); color: #ffa040;
+      border: 1px solid rgba(255,140,0,0.28);
+      padding: 1px 4px; border-radius: 3px; flex-shrink: 0;
+    }
+
+    /* ── Row flash animations (rank-up = gold, new-elim = red) ── */
+    @keyframes flashGold {
+      0%, 8%  { background: rgba(255,215,0,0.20); }
+      100%    { background: transparent; }
+    }
+    @keyframes flashRed {
+      0%, 8%  { background: rgba(255,23,68,0.18); }
+      100%    { background: transparent; }
+    }
+    .flash-gold { animation: flashGold 3.5s ease forwards; }
+    .flash-red  { animation: flashRed  3.5s ease forwards; }
+
+    /* ── Eliminated-section divider ── */
+    .elim-divider {
+      display: flex; align-items: center; gap: 10px;
+      padding: 5px 16px 3px;
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.2px; color: rgba(255,50,80,0.55);
+      flex-shrink: 0;
+    }
+    .elim-divider::after {
+      content: ''; flex: 1; height: 1px;
+      background: rgba(255,23,68,0.16);
+    }
+
+    /* ── Today's matches schedule strip ── */
+    #schedule-bar {
+      grid-area: schedule;
+      background: var(--bg-panel);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      padding: 0 14px;
+      display: flex; align-items: center; gap: 0;
+      overflow-x: auto; flex-shrink: 0;
+    }
+    #schedule-bar::-webkit-scrollbar { display: none; }
+    .sched-label {
+      font-size: 9px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--scarlet); flex-shrink: 0;
+      margin-right: 10px; white-space: nowrap;
+    }
+    .sched-match {
+      display: flex; align-items: center; gap: 5px;
+      padding: 0 10px; flex-shrink: 0;
+      border-left: 1px solid var(--border);
+      font-size: 10px; white-space: nowrap; height: 100%;
+    }
+    .sched-live-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--live-green);
+      animation: pulse-live 1.5s ease-in-out infinite;
+    }
+    .sched-team { font-weight: 600; color: var(--text-secondary); }
+    .sched-team.is-pick { color: #ff8fa3; }
+    .sched-score { font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text-primary); }
+    .sched-score.live { color: var(--live-green); }
+    .sched-vs    { color: var(--text-muted); font-size: 9px; }
+    .sched-time  { color: var(--text-muted); font-size: 10px; }
+
+    /* ── Podium (top-3 visual) above leaderboard list ── */
+    #podium-wrap {
+      display: flex; justify-content: center; align-items: flex-end;
+      gap: 6px; padding: 6px 12px 0;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .podium-col {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 2px; width: 78px;
+    }
+    .podium-flag-em { font-size: 15px; line-height: 1; }
+    .podium-pname {
+      font-size: 10px; font-weight: 700; text-align: center;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;
+    }
+    .podium-ppts {
+      font-size: 10px; font-weight: 900; font-variant-numeric: tabular-nums;
+      color: var(--text-secondary);
+    }
+    .podium-stand {
+      width: 100%; border-radius: 3px 3px 0 0; margin-top: 3px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 900;
+    }
+
+    /* ── Idle TV fullscreen overlay ── */
+    #idle-overlay {
+      display: none; position: fixed; inset: 0; z-index: 500;
+      background: var(--bg-base);
+      flex-direction: column; cursor: pointer;
+    }
+    #idle-overlay.active { display: flex; }
+    #idle-content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+    #idle-hint {
+      position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+      font-size: 10px; color: var(--text-muted); letter-spacing: 0.5px;
+      white-space: nowrap; pointer-events: none;
+    }
+    #idle-view-dots {
+      position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 6px;
+    }
+    .idle-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--text-muted); opacity: 0.4;
+      transition: background 0.3s, opacity 0.3s;
+    }
+    .idle-dot.active { background: var(--gold); opacity: 1; }
+
+    /* Mobile rank arrow */
+    .mob-rank-arrow { font-size: 9px; font-weight: 800; }
+    .mob-rank-arrow.up   { color: var(--positive); }
+    .mob-rank-arrow.down { color: var(--negative); }
   </style>
 </head>
 
@@ -1672,6 +1815,13 @@
     </header>
 
     <!-- ========================================================
+         SCHEDULE BAR (today's matches strip)
+    ======================================================== -->
+    <div id="schedule-bar">
+      <span class="sched-label">TODAY</span>
+    </div>
+
+    <!-- ========================================================
          MAIN CONTENT
     ======================================================== -->
     <main id="main">
@@ -1685,6 +1835,8 @@
           </div>
           <span class="panel-subtitle" id="leaderboard-count"></span>
         </div>
+        <!-- Top-3 podium card -->
+        <div id="podium-wrap"></div>
         <div id="leaderboard-scroll">
           <div id="leaderboard-list"></div>
         </div>
@@ -1750,6 +1902,17 @@
     </nav>
 
   </div><!-- #mob-view -->
+
+  <!-- Idle TV overlay — fullscreen cycling view after inactivity -->
+  <div id="idle-overlay">
+    <div id="idle-content"></div>
+    <div id="idle-view-dots">
+      <div class="idle-dot active"></div>
+      <div class="idle-dot"></div>
+      <div class="idle-dot"></div>
+    </div>
+    <div id="idle-hint">Tap or move to dismiss</div>
+  </div>
 
   <!-- Staff and match data -->
   <script src="data.js"></script>
@@ -1845,6 +2008,13 @@
       lastUpdated:          new Date(),
       selectedBracketRound: null,   // null = auto (active round)
       _bracketUserSelected: false,  // true when user manually clicked a tab
+      _prevRanks:           {},     // { name: rank } — snapshot before last refresh
+      _prevAlive:           {},     // { country: isAlive } — to detect new eliminations
+      _flashRows:           {},     // { name: 'gold'|'red' } — transient highlight
+      _idleTimer:           null,
+      _idleActive:          false,
+      _idleViewIndex:       0,
+      _topScorers:          [],     // cached scorers for idle view
     };
 
     // ============================================================
@@ -2328,6 +2498,16 @@
         e.rank = rank;
       });
 
+      // Engagement fields: rank change, gap to leader, top-gainer flag
+      const leaderPts = entries.length > 0 ? entries[0].points : 0;
+      const maxTodayGain = entries.reduce((m, e) => Math.max(m, e.todayPoints), 0);
+      entries.forEach(e => {
+        const prevRank = state._prevRanks[e.name];
+        e.rankChange  = prevRank != null ? prevRank - e.rank : null; // positive = moved up
+        e.gapToLeader = e.rank > 1 ? leaderPts - e.points : 0;
+        e.isTopGainer = maxTodayGain > 0 && e.todayPoints === maxTodayGain;
+      });
+
       return entries;
     }
 
@@ -2443,16 +2623,17 @@
           m.events = (eventsMap[m.id] || []).map(e => normalizeEvent(e, m));
         });
 
-        // Calculate points and build leaderboard from fresh data
+        // Update matches first so getCountryTournamentStatus reads fresh data
+        state.matches        = newMatches;
+        state.groupInfo      = gResult.groupInfo;
+        state.groupStandings = gResult.standings;
+        state.staffPicks     = STAFF_PICKS;
+
+        // Calculate points and build leaderboard (reads state.matches internally)
         const newCountryPoints = calculateCountryPoints(newMatches);
         const newLeaderboard   = buildLeaderboard(STAFF_PICKS, newCountryPoints);
 
-        // All steps succeeded — update state atomically
-        state.groupInfo      = gResult.groupInfo;
-        state.groupStandings = gResult.standings;
-        state.matches        = newMatches;
         state.countryPoints  = newCountryPoints;
-        state.staffPicks     = STAFF_PICKS;
         state.leaderboard    = newLeaderboard;
 
       } catch (err) {
@@ -2475,7 +2656,7 @@
       const aliveCount = entries.filter(e => e.isAlive).length;
       const survEl = document.getElementById("survival-count");
       if (survEl) {
-        if (isKnockoutPhase() && entries.some(e => e.koStage)) {
+        if (isKnockoutPhase()) {
           survEl.innerHTML = `<strong>${aliveCount}</strong> of ${entries.length} still alive`;
         } else {
           survEl.innerHTML = "";
@@ -2485,27 +2666,47 @@
       const maxPoints    = Math.max(...entries.map(e => e.points), 1);
       const uniquePoints = [...new Set(entries.map(e => e.points))].sort((a, b) => b - a);
 
+      let firstElimSeen = false;
       list.innerHTML = entries.map((entry) => {
         const tier      = uniquePoints.indexOf(entry.points) + 1;
         const rankClass = tier <= 3 ? `rank-${tier}` : "";
         const liveClass = entry.isLive ? "is-live" : "";
         const change    = entry.todayPoints || 0;
+        // Eliminated = not alive once knockout phase has started (whether lost in bracket or didn't qualify)
+        const isElim    = !entry.isAlive && isKnockoutPhase();
 
         const barPct   = Math.max(Math.round((entry.points / maxPoints) * 100), entry.points > 0 ? 2 : 0);
         const barClass = tier === 1 ? "rank-1" : tier === 2 ? "rank-2" : tier === 3 ? "rank-3" : "rank-other";
 
         // Alive dot + stage badge
-        const inKnockout = isKnockoutPhase() && entry.koStage;
+        const inKnockout = isKnockoutPhase();
         const aliveDotClass = !inKnockout ? "not-in" : entry.isAlive ? "alive" : "eliminated";
         const aliveDot = `<div class="alive-dot ${aliveDotClass}"></div>`;
-        const stageBadgeClass = !inKnockout ? "not-in" : entry.isAlive ? "alive" : "eliminated";
-        const stageBadgeText  = entry.koStage || "";
+        const stageBadgeClass = !inKnockout ? "not-in" : entry.koStage ? (entry.isAlive ? "alive" : "eliminated") : "not-in";
+        const stageBadgeText  = entry.koStage || (isElim ? "OUT" : "");
         const stageBadge = stageBadgeText
           ? `<span class="stage-badge ${stageBadgeClass}">${stageBadgeText}</span>` : "";
 
         const liveBadge = entry.isLive ? `<span class="row-live-badge">LIVE</span>` : "";
         const todayBadge = entry.hasMatchToday && !entry.isLive
           ? `<span class="row-plays-today">⚽ TODAY</span>` : "";
+
+        // Rank change arrow
+        let rankArrow = "";
+        if (entry.rankChange > 0)       rankArrow = `<span class="rank-arrow up">▲</span>`;
+        else if (entry.rankChange < 0)  rankArrow = `<span class="rank-arrow down">▼</span>`;
+
+        // Biggest-gainer badge
+        const gainerBadge = entry.isTopGainer ? `<span class="gainer-badge">🔥 HOT</span>` : "";
+
+        // Gap to leader
+        const gapLine = entry.gapToLeader > 0
+          ? `<div class="row-gap">-${entry.gapToLeader}</div>` : "";
+
+        // Flash class (rank-up = gold, newly eliminated = red)
+        const flashClass = (state._flashRows[entry.name] === 'gold') ? ' flash-gold'
+                         : (state._flashRows[entry.name] === 'red')  ? ' flash-red'
+                         : '';
 
         const cardLine = (entry.yellowCards > 0 || entry.redCards > 0 || entry.ownGoals > 0)
           ? `<span style="color:var(--text-muted)">·</span>
@@ -2533,16 +2734,25 @@
           ? `<div class="row-today ${changeClass(change)}">${change > 0 ? "+" : ""}${change} today</div>`
           : `<div class="row-today zero">—</div>`;
 
-        return `
-          <div class="leaderboard-row ${rankClass} ${liveClass}${(!entry.isAlive && isKnockoutPhase() && entry.koStage !== null) ? " elim-row" : ""}">
-            <div class="row-rank ${rankClass}">${entry.rank}</div>
+        // Eliminated section divider (inserted once before first elim row)
+        let prefix = "";
+        if (isElim && !firstElimSeen) {
+          firstElimSeen = true;
+          prefix = `<div class="elim-divider">Eliminated</div>`;
+        }
+
+        return prefix + `
+          <div class="leaderboard-row ${rankClass} ${liveClass}${isElim ? " elim-row" : ""}${flashClass}">
+            <div class="row-rank ${rankClass}" style="display:flex;flex-direction:column;align-items:center;gap:1px">
+              <span>${entry.rank}</span>${rankArrow}
+            </div>
             <div class="row-identity">
               ${aliveDot}
               ${flagImg(entry.countryCode, 30, 22, "row-flag")}
               <div class="row-name-line">
                 <span class="row-flag-em">${flagEmoji(entry.countryCode)}</span>
                 <span class="row-name">${entry.name}</span>
-                ${liveBadge}${stageBadge}
+                ${liveBadge}${stageBadge}${gainerBadge}
                 <span class="row-name-sep">·</span>
                 <span class="row-country">${flagEmoji(entry.countryCode)} ${entry.country}</span>
                 <span class="row-expand-arrow">▾</span>
@@ -2556,7 +2766,7 @@
             </div>
             <div class="row-points-section">
               <div class="row-points"><span class="pts-num" data-v="${entry.points}">0</span><span style="font-size:11px;font-weight:400;color:var(--text-muted);margin-left:2px">pts</span></div>
-              ${todayLine}
+              ${todayLine}${gapLine}
             </div>
             ${(function() {
               const mbd = state.matches
@@ -2602,6 +2812,227 @@
           if (row) row.classList.toggle("expanded");
         });
       }
+    }
+
+    // ============================================================
+    // RENDER: SCHEDULE BAR
+    // Shows today's matches in the strip between header and main.
+    // ============================================================
+    function renderScheduleBar() {
+      const bar = document.getElementById("schedule-bar");
+      if (!bar) return;
+
+      const today = new Date();
+      const todayMatches = state.matches
+        .filter(m => m.status === "live" ||
+          (m.status === "scheduled" && isSameDay(new Date(m.datetime), today)) ||
+          (m.status === "completed" && isSameDay(new Date(m.datetime), today)))
+        .sort((a, b) => {
+          if (a.status === "live" && b.status !== "live") return -1;
+          if (b.status === "live" && a.status !== "live") return 1;
+          return new Date(a.datetime) - new Date(b.datetime);
+        });
+
+      const pickedCountries = new Set(state.staffPicks.map(p => p.country));
+
+      if (!todayMatches.length) {
+        bar.innerHTML = `<span class="sched-label">TODAY</span><span style="color:var(--text-muted);font-size:11px">No matches scheduled</span>`;
+        return;
+      }
+
+      bar.innerHTML = `<span class="sched-label">TODAY</span>` + todayMatches.map(m => {
+        const isLive = m.status === "live";
+        const isDone = m.status === "completed";
+        const hName  = m.homeTeam?.name || "TBD";
+        const aName  = m.awayTeam?.name || "TBD";
+        const hPick  = pickedCountries.has(hName);
+        const aPick  = pickedCountries.has(aName);
+        const hShort = hName.split(" ")[0];
+        const aShort = aName.split(" ")[0];
+        const liveIndicator = isLive ? `<span class="sched-live-dot"></span>` : "";
+        let middle;
+        if (isLive || isDone) {
+          const cls = isLive ? " live" : "";
+          middle = `<span class="sched-score${cls}">${m.homeScore ?? 0}–${m.awayScore ?? 0}</span>`;
+        } else {
+          middle = `<span class="sched-time">${formatKickoff(m.datetime)}</span>`;
+        }
+        return `<div class="sched-match">${liveIndicator}<span class="sched-team${hPick ? " is-pick" : ""}">${hShort}</span>${middle}<span class="sched-team${aPick ? " is-pick" : ""}">${aShort}</span></div>`;
+      }).join("");
+    }
+
+    // ============================================================
+    // RENDER: TOP-3 PODIUM
+    // Compact podium card at the top of the leaderboard panel.
+    // ============================================================
+    function renderPodium() {
+      const wrap = document.getElementById("podium-wrap");
+      if (!wrap) return;
+      const entries = state.leaderboard;
+      if (entries.length < 2) { wrap.innerHTML = ""; return; }
+
+      // Classic podium order: [2nd, 1st, 3rd]
+      const top3    = entries.slice(0, Math.min(3, entries.length));
+      const ordered = top3.length >= 3
+        ? [top3[1], top3[0], top3[2]]
+        : [null, top3[0], top3[1] || null];
+
+      const medals     = ["🥈", "🥇", "🥉"];
+      const heights    = [26, 36, 18];
+      const colors     = ["#888", "var(--gold)", "#cd7f32"];
+      const textColors = ["rgba(255,255,255,0.8)", "#000", "rgba(255,255,255,0.8)"];
+      const ptColors   = ["#c0c0c0", "var(--gold)", "#cd7f32"];
+
+      wrap.innerHTML = ordered.map((e, i) => {
+        if (!e) return `<div class="podium-col"></div>`;
+        return `
+          <div class="podium-col">
+            <span class="podium-flag-em">${flagEmoji(e.countryCode)}</span>
+            <span class="podium-pname" title="${e.name}">${e.name.split(" ")[0]}</span>
+            <span class="podium-ppts" style="color:${ptColors[i]}">${e.points}</span>
+            <div class="podium-stand" style="height:${heights[i]}px;background:${colors[i]};color:${textColors[i]}">${medals[i]}</div>
+          </div>`;
+      }).join("");
+    }
+
+    // ============================================================
+    // IDLE TV MODE
+    // After IDLE_TIMEOUT_MS of inactivity, cycles through
+    // leaderboard / bracket results / golden boot views.
+    // Any interaction dismisses the overlay.
+    // ============================================================
+    const IDLE_TIMEOUT_MS = 2 * 60 * 1000;  // 2 minutes
+    const IDLE_CYCLE_MS   = 15 * 1000;       // 15 seconds per view
+
+    function resetIdleTimer() {
+      if (state._idleActive) { stopIdleMode(); return; }
+      clearTimeout(state._idleTimer);
+      state._idleTimer = setTimeout(activateIdleMode, IDLE_TIMEOUT_MS);
+    }
+
+    function activateIdleMode() {
+      state._idleActive    = true;
+      state._idleViewIndex = 0;
+      const overlay = document.getElementById("idle-overlay");
+      if (overlay) overlay.classList.add("active");
+      showIdleView();
+      state._idleCycleTimer = setInterval(() => {
+        state._idleViewIndex = (state._idleViewIndex + 1) % 3;
+        showIdleView();
+      }, IDLE_CYCLE_MS);
+    }
+
+    function stopIdleMode() {
+      state._idleActive = false;
+      clearInterval(state._idleCycleTimer);
+      const overlay = document.getElementById("idle-overlay");
+      if (overlay) overlay.classList.remove("active");
+      // Restart the idle countdown
+      clearTimeout(state._idleTimer);
+      state._idleTimer = setTimeout(activateIdleMode, IDLE_TIMEOUT_MS);
+    }
+
+    function showIdleView() {
+      const content = document.getElementById("idle-content");
+      if (!content) return;
+      document.querySelectorAll(".idle-dot").forEach((d, i) => {
+        d.classList.toggle("active", i === state._idleViewIndex);
+      });
+      const views = ["leaderboard", "bracket", "boot"];
+      const view  = views[state._idleViewIndex % views.length];
+      if (view === "leaderboard") content.innerHTML = buildIdleLeaderboard();
+      else if (view === "bracket") content.innerHTML = buildIdleBracket();
+      else                         content.innerHTML = buildIdleBoot();
+    }
+
+    function buildIdleLeaderboard() {
+      const entries = state.leaderboard;
+      const rows = entries.map(e => {
+        const medal = e.rank === 1 ? "🥇" : e.rank === 2 ? "🥈" : e.rank === 3 ? "🥉" : "";
+        const rankEl = medal || `<span style="font-weight:900;color:var(--text-muted)">${e.rank}</span>`;
+        return `
+          <div style="display:grid;grid-template-columns:56px 1fr 110px;align-items:center;padding:0 28px;min-height:58px;border-bottom:1px solid var(--border);${!e.isAlive && isKnockoutPhase() ? "opacity:0.45" : ""}">
+            <div style="font-size:22px;text-align:center">${rankEl}</div>
+            <div>
+              <div style="font-size:18px;font-weight:700">${flagEmoji(e.countryCode)} ${e.name}</div>
+              <div style="font-size:12px;color:var(--text-muted)">${e.country}</div>
+            </div>
+            <div style="text-align:right;font-size:24px;font-weight:900;font-variant-numeric:tabular-nums;color:${e.rank === 1 ? "var(--gold)" : "var(--text-primary)"}">${e.points}</div>
+          </div>`;
+      }).join("");
+      return `
+        <div style="padding:14px 28px 10px;border-bottom:1px solid var(--border);background:var(--bg-panel);flex-shrink:0">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--scarlet)">Leaderboard</div>
+        </div>
+        <div style="flex:1;overflow-y:auto">${rows}</div>`;
+    }
+
+    function buildIdleBracket() {
+      const koMatches = state.matches
+        .filter(m => !m.group && m.status === "completed")
+        .sort((a, b) => new Date(b.datetime) - new Date(a.datetime))
+        .slice(0, 8);
+      if (!koMatches.length) return buildIdleLeaderboard();
+
+      const cards = koMatches.map(m => {
+        const hs = m.homeScore ?? 0, as = m.awayScore ?? 0;
+        const hWin = hs > as || (hs === as && m.homePenalties > m.awayPenalties);
+        const aWin = as > hs || (hs === as && m.awayPenalties > m.homePenalties);
+        const hPen = m.homePenalties != null ? ` (${m.homePenalties})` : "";
+        const aPen = m.awayPenalties != null ? ` (${m.awayPenalties})` : "";
+        const dateLbl = m.datetime ? new Date(m.datetime).toLocaleDateString("en-US", { month:"short", day:"numeric" }) : "";
+        return `
+          <div style="background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:14px 20px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px">
+            <div style="font-size:16px;font-weight:${hWin ? "900" : "500"};color:${hWin ? "var(--positive)" : "var(--text-primary)"}">${flagEmoji(m.homeTeam?.flagCode)} ${m.homeTeam?.name || "TBD"}</div>
+            <div style="text-align:center">
+              <div style="font-size:28px;font-weight:900;font-variant-numeric:tabular-nums">${hs}${hPen}–${as}${aPen}</div>
+              <div style="font-size:9px;color:var(--text-muted)">${dateLbl} · ${abbreviateRound(m.round)}</div>
+            </div>
+            <div style="font-size:16px;font-weight:${aWin ? "900" : "500"};color:${aWin ? "var(--positive)" : "var(--text-primary)"};text-align:right">${m.awayTeam?.name || "TBD"} ${flagEmoji(m.awayTeam?.flagCode)}</div>
+          </div>`;
+      }).join("");
+      return `
+        <div style="padding:14px 28px 10px;border-bottom:1px solid var(--border);background:var(--bg-panel);flex-shrink:0">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--scarlet)">Recent Knockout Results</div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:12px 20px;display:flex;flex-direction:column;gap:10px">${cards}</div>`;
+    }
+
+    function buildIdleBoot() {
+      const scorers = {};
+      for (const match of state.matches) {
+        if (!match.events) continue;
+        for (const e of match.events) {
+          if (e.type !== "goal") continue;
+          const player   = e.player || "Unknown";
+          const teamName = e.team === "home" ? match.homeTeam?.name : match.awayTeam?.name;
+          const flagCode = e.team === "home" ? match.homeTeam?.flagCode : match.awayTeam?.flagCode;
+          const key = player + "|" + teamName;
+          if (!scorers[key]) scorers[key] = { player, team: teamName, flagCode, goals: 0 };
+          scorers[key].goals++;
+        }
+      }
+      const sorted = Object.values(scorers).sort((a, b) => b.goals - a.goals).slice(0, 12);
+      if (!sorted.length) return buildIdleLeaderboard();
+
+      let bootRank = 1;
+      const rows = sorted.map((s, i) => {
+        if (i > 0 && s.goals < sorted[i - 1].goals) bootRank = i + 1;
+        const medal = bootRank === 1 ? "🥇" : bootRank === 2 ? "🥈" : bootRank === 3 ? "🥉" : bootRank;
+        const flag  = s.flagCode ? flagImg(s.flagCode, 24, 18) : "";
+        return `
+          <div style="display:flex;align-items:center;gap:16px;padding:0 28px;min-height:52px;border-bottom:1px solid var(--border)">
+            <div style="font-size:20px;min-width:38px;text-align:center">${medal}</div>
+            <div style="flex-shrink:0">${flag}</div>
+            <div style="flex:1;font-size:17px;font-weight:600">${s.player}<span style="font-size:12px;color:var(--text-muted);font-weight:400;margin-left:8px">${s.team}</span></div>
+            <div style="font-size:26px;font-weight:900;color:var(--gold);font-variant-numeric:tabular-nums">${s.goals}</div>
+          </div>`;
+      }).join("");
+      return `
+        <div style="padding:14px 28px 10px;border-bottom:1px solid var(--border);background:var(--bg-panel);flex-shrink:0">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--scarlet)">Golden Boot</div>
+        </div>
+        <div style="flex:1;overflow-y:auto">${rows}</div>`;
     }
 
     // ============================================================
@@ -3204,10 +3635,35 @@
     // Called on initial load and after every refresh.
     // ============================================================
     function renderAll() {
+      // Compute flash events: compare new leaderboard against previous snapshot
+      const newFlash = {};
+      for (const e of state.leaderboard) {
+        const prev = state._prevRanks[e.name];
+        if (prev != null && e.rank < prev) newFlash[e.name] = 'gold';      // moved up
+        const wasAlive = state._prevAlive[e.country];
+        if (wasAlive === true && !e.isAlive) newFlash[e.name] = 'red';     // newly eliminated
+      }
+      state._flashRows = newFlash;
+
+      // Render all panels
+      renderScheduleBar();
+      renderPodium();
       renderLeaderboard();
       renderKnockoutBracket();
       renderGoldenBoot();
       renderMobileAll();
+
+      // If idle mode is active, refresh the idle view with fresh data
+      if (state._idleActive) showIdleView();
+
+      // Snapshot current ranks/alive for next cycle comparison
+      const newPrevRanks = {}, newPrevAlive = {};
+      for (const e of state.leaderboard) {
+        newPrevRanks[e.name]    = e.rank;
+        newPrevAlive[e.country] = e.isAlive;
+      }
+      state._prevRanks = newPrevRanks;
+      state._prevAlive = newPrevAlive;
 
       // Update "last updated" timestamp
       state.lastUpdated = new Date();
@@ -3286,17 +3742,23 @@
         const tier    = mobUniquePts.indexOf(e.points) + 1;
         const isTop3  = tier <= 3;
         const medal   = tier === 1 ? "🥇" : tier === 2 ? "🥈" : tier === 3 ? "🥉" : null;
+        // Rank change arrow from previous snapshot
+        const prevRank = state._prevRanks[e.name];
+        let arrow = "";
+        if (prevRank != null && rank < prevRank)      arrow = `<span class="mob-rank-arrow up">▲</span>`;
+        else if (prevRank != null && rank > prevRank) arrow = `<span class="mob-rank-arrow down">▼</span>`;
         const rankEl  = medal
           ? `<div class="mob-lb-rank">${medal}</div>`
-          : `<div class="mob-lb-rank"><span class="mob-lb-rank-num">${rank}</span></div>`;
+          : `<div class="mob-lb-rank"><span class="mob-lb-rank-num">${rank}</span>${arrow}</div>`;
         const barPct  = Math.max(Math.round((e.points / maxPts) * 100), e.points > 0 ? 2 : 0);
         const barClr  = tier === 1 ? "var(--gold)" : tier <= 3 ? "var(--scarlet)" : "var(--text-muted)";
+        const isElimMob = !e.isAlive && isKnockoutPhase();
         return `
-          <div class="mob-lb-row${isTop3 ? " top3" : ""}" style="position:relative;overflow:hidden">
+          <div class="mob-lb-row${isTop3 ? " top3" : ""}" style="position:relative;overflow:hidden${isElimMob ? ";opacity:0.5" : ""}">
             ${rankEl}
             ${flagImg(e.countryCode, 28, 21)}
             <div class="mob-lb-info">
-              <div class="mob-lb-name">${e.name}</div>
+              <div class="mob-lb-name${isElimMob ? '" style="text-decoration:line-through' : ''}">${e.name}</div>
               <div class="mob-lb-country">${e.country}</div>
             </div>
             <div class="mob-lb-pts">${e.points}</div>
@@ -3655,6 +4117,16 @@
       startLiveTicker();
       startGroupScroll();
       setInterval(refresh, REFRESH_INTERVAL_MS);
+
+      // Idle TV mode: start countdown and bind interaction reset
+      state._idleTimer = setTimeout(activateIdleMode, IDLE_TIMEOUT_MS);
+      ["mousemove", "keydown", "touchstart", "click", "scroll"].forEach(ev => {
+        document.addEventListener(ev, resetIdleTimer, { passive: true });
+      });
+
+      // Clicking idle overlay dismisses it
+      const overlay = document.getElementById("idle-overlay");
+      if (overlay) overlay.addEventListener("click", stopIdleMode);
     })();
   </script>
 </body>
