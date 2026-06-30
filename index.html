@@ -492,12 +492,12 @@
     .row-stats-line {
       display: flex;
       align-items: center;
-      gap: 5px;
-      font-size: 10px;
+      flex-wrap: wrap;
+      gap: 3px;
+      font-size: 9px;
       color: var(--text-muted);
-      white-space: nowrap;
-      overflow: hidden;
       min-width: 0;
+      line-height: 1.4;
     }
 
     .row-record { display: flex; gap: 5px; }
@@ -1724,6 +1724,7 @@
     .sched-score.live { color: var(--live-green); }
     .sched-vs    { color: var(--text-muted); font-size: 9px; }
     .sched-time  { color: var(--text-muted); font-size: 10px; }
+    .sched-pens  { font-size: 8px; color: var(--text-muted); font-weight: 500; white-space: nowrap; }
 
     /* ── Podium (top-3 visual) above leaderboard list ── */
     #podium-wrap {
@@ -2853,7 +2854,9 @@
         let middle;
         if (isLive || isDone) {
           const cls = isLive ? " live" : "";
-          middle = `<span class="sched-score${cls}">${m.homeScore ?? 0}–${m.awayScore ?? 0}</span>`;
+          const hasPens = isDone && m.homePenalties != null && m.awayPenalties != null;
+          const penLabel = hasPens ? `<span class="sched-pens">(${m.homePenalties}–${m.awayPenalties} pks)</span>` : "";
+          middle = `<span class="sched-score${cls}">${m.homeScore ?? 0}–${m.awayScore ?? 0}</span>${penLabel}`;
         } else {
           middle = `<span class="sched-time">${formatKickoff(m.datetime)}</span>`;
         }
@@ -3378,14 +3381,15 @@
         const timeStr  = m.datetime ? formatKickoff(m.datetime) : "";
         const timeLabel = dateStr ? `${dateStr} · ${timeStr}` : "";
 
-        const resultLabel = isCompleted ? "FT" : isLive ? "" : "";
+        const wentToPens = isCompleted && m.homePenalties != null && m.awayPenalties != null;
+        const ftLabel = wentToPens ? "FT · Pens" : "FT";
 
         return `
           <div class="bk-match${isLive ? " is-live" : ""}${isFinalRound ? " is-final" : ""}" onclick="this.classList.toggle('expanded')">
             <div class="bk-match-time">
               <span>${isLive ? "" : (isCompleted ? `${timeLabel}` : timeLabel)}</span>
               <span style="display:flex;align-items:center;gap:4px">
-                ${isCompleted ? `<span style="font-size:8px;font-weight:700;color:var(--text-muted)">FT</span>` : ""}
+                ${isCompleted ? `<span style="font-size:8px;font-weight:700;color:var(--text-muted)">${ftLabel}</span>` : ""}
                 ${isLive ? `<span class="bk-live-badge">● LIVE</span>` : ""}
                 <span class="bk-expand-icon">▾</span>
               </span>
@@ -3931,6 +3935,10 @@
 
         const hScore = hasScore ? (m.homeScore != null ? m.homeScore : 0) : null;
         const aScore = hasScore ? (m.awayScore != null ? m.awayScore : 0) : null;
+        const mobWentToPens = isCompleted && m.homePenalties != null && m.awayPenalties != null;
+        const hPen  = mobWentToPens ? ` (${m.homePenalties})` : "";
+        const aPen  = mobWentToPens ? ` (${m.awayPenalties})` : "";
+        const mobFtLabel = mobWentToPens ? "FT · Pens" : "FT";
         const timeLabel = m.datetime
           ? new Date(m.datetime).toLocaleDateString("en-US", { month: "short", day: "numeric" }) + " · " + formatKickoff(m.datetime)
           : "";
@@ -3940,8 +3948,8 @@
         return `
           <div class="mob-bracket-match${isLive ? " is-live" : ""}${isFinal ? " is-final" : ""}">
             <div style="font-size:9px;color:var(--text-muted);padding:3px 8px;background:rgba(0,0,0,0.15);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-              <span>${isCompleted ? timeLabel : (hasScore ? timeLabel : timeLabel)}</span>
-              <span>${isCompleted ? '<span style="font-size:8px;font-weight:700;color:var(--text-muted)">FT</span>' : ""}${isLive ? '<span style="color:var(--live-green);font-weight:800">● LIVE</span>' : ""}</span>
+              <span>${timeLabel}</span>
+              <span>${isCompleted ? `<span style="font-size:8px;font-weight:700;color:var(--text-muted)">${mobFtLabel}</span>` : ""}${isLive ? '<span style="color:var(--live-green);font-weight:800">● LIVE</span>' : ""}</span>
             </div>
             <div class="mob-bracket-row${hPick ? " is-pick" : ""}${hWin ? " winner" : ""}">
               ${hFlag}
@@ -3949,7 +3957,7 @@
                 <div class="mob-bracket-row-name${hPick ? " is-pick" : ""}">${hName}</div>
                 ${hStaff ? `<div style="font-size:9px;color:var(--scarlet);margin-top:1px">${hStaff}</div>` : ""}
               </div>
-              <span class="mob-bracket-row-score${hScore === null ? " tbd" : isLive ? " is-live" : ""}${hWin ? " winner" : ""}">${hScore !== null ? hScore : "–"}</span>
+              <span class="mob-bracket-row-score${hScore === null ? " tbd" : isLive ? " is-live" : ""}${hWin ? " winner" : ""}">${hScore !== null ? hScore + hPen : "–"}</span>
             </div>
             <div class="mob-bracket-row${aPick ? " is-pick" : ""}${aWin ? " winner" : ""}">
               ${aFlag}
@@ -3957,7 +3965,7 @@
                 <div class="mob-bracket-row-name${aPick ? " is-pick" : ""}">${aName}</div>
                 ${aStaff ? `<div style="font-size:9px;color:var(--scarlet);margin-top:1px">${aStaff}</div>` : ""}
               </div>
-              <span class="mob-bracket-row-score${aScore === null ? " tbd" : isLive ? " is-live" : ""}${aWin ? " winner" : ""}">${aScore !== null ? aScore : "–"}</span>
+              <span class="mob-bracket-row-score${aScore === null ? " tbd" : isLive ? " is-live" : ""}${aWin ? " winner" : ""}">${aScore !== null ? aScore + aPen : "–"}</span>
             </div>
           </div>`;
       }).join("");
