@@ -3367,10 +3367,11 @@
       const sortedRoundNames = Object.keys(rounds).sort((a, b) => getRoundSortKey(a) - getRoundSortKey(b));
       const pickedCountries  = new Set(state.staffPicks.map(p => p.country));
 
-      // Active round = earliest with live/scheduled; fallback to last
-      const activeRound = sortedRoundNames.find(r =>
-        rounds[r].some(m => m.status === "live" || m.status === "scheduled")
-      ) || sortedRoundNames[sortedRoundNames.length - 1];
+      // Active round: prefer Final if it's live/scheduled, else earliest live/scheduled, else last
+      const hasUpcoming = r => rounds[r].some(m => m.status === "live" || m.status === "scheduled");
+      const activeRound = (rounds["Final"] && hasUpcoming("Final"))
+        ? "Final"
+        : sortedRoundNames.find(hasUpcoming) || sortedRoundNames[sortedRoundNames.length - 1];
 
       // Determine which round to display.
       // Auto-advance to activeRound unless user manually picked a tab this session.
@@ -4010,9 +4011,10 @@
       const sortedRoundNames = Object.keys(rounds).sort(function(a, b) { return getRoundSortKey(a) - getRoundSortKey(b); });
       const pickedCountries  = new Set(state.staffPicks.map(function(p) { return p.country; }));
 
-      const activeRound = sortedRoundNames.find(function(r) {
-        return rounds[r].some(function(m) { return m.status === "live" || m.status === "scheduled"; });
-      }) || sortedRoundNames[sortedRoundNames.length - 1];
+      const hasUpcomingMob = function(r) { return rounds[r].some(function(m) { return m.status === "live" || m.status === "scheduled"; }); };
+      const activeRound = (rounds["Final"] && hasUpcomingMob("Final"))
+        ? "Final"
+        : sortedRoundNames.find(hasUpcomingMob) || sortedRoundNames[sortedRoundNames.length - 1];
 
       // Sync with desktop: auto-advance unless user manually picked a tab
       if (!state._bracketUserSelected || !rounds[state.selectedBracketRound]) {
