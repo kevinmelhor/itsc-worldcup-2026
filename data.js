@@ -138,6 +138,10 @@ const STAFF_PICKS = [
   { name: "Esma Bartu",                country: "Türkiye",   countryCode: "tr" },
   { name: "Nick Berdzenishvili",       country: "Argentina", countryCode: "ar" },
   { name: "Kevana Dupree",             country: "Brazil",    countryCode: "br" },
+  { name: "Nimra Azhar",               country: "Portugal",  countryCode: "pt" },
+  { name: "Jeremias Colon",            country: "Argentina", countryCode: "ar" },
+  { name: "Ismail Williams",           country: "France",    countryCode: "fr" },
+  { name: "Om Pradhan",                country: "Argentina", countryCode: "ar" },
 ];
 
 // ============================================================
