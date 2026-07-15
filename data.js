@@ -1,16 +1,12 @@
 /**
- * mock-data.js
+ * data.js
  * ITSC World Cup 2026 Challenge Dashboard
  *
- * This file contains realistic mock data that mirrors the structure of the
- * BALLDONTLIE FIFA API responses. Use this for testing and display before
- * the tournament begins.
- *
- * When going live, set USE_MOCK_DATA = false in index.html and the dashboard
- * will switch to real API calls automatically. This file can then be removed
- * or left in place (it won't be used).
+ * Static match data mirroring the BALLDONTLIE FIFA API response structure.
+ * Used as fallback when the live API is unavailable (e.g. local dev).
  *
  * API base URL: https://fifa.balldontlie.io
+ * Last synced: July 15, 2026
  */
 
 // ============================================================
@@ -19,7 +15,7 @@
 // Note: Group assignments are approximate placeholders.
 // Verify against the official FIFA draw before the tournament.
 // ============================================================
-const MOCK_GROUPS = {
+const GROUPS = {
   A: ["USA", "Uruguay", "Panama", "Belgium"],
   B: ["Mexico", "Jamaica", "Ecuador", "Senegal"],
   C: ["Canada", "Portugal", "Morocco", "Jordan"],
@@ -39,7 +35,7 @@ const MOCK_GROUPS = {
 // Mimics the /fifa/worldcup/v1/teams endpoint.
 // flagCode maps to https://flagcdn.com/{flagCode}.svg
 // ============================================================
-const MOCK_TEAMS = [
+const TEAMS = [
   // Group A
   { id: 1,  name: "USA",          code: "USA", flagCode: "us",     group: "A" },
   { id: 2,  name: "Uruguay",      code: "URU", flagCode: "uy",     group: "A" },
@@ -161,7 +157,7 @@ const STAFF_PICKS = [
 //   player: name string
 //   minute: integer
 // ============================================================
-const MOCK_MATCHES = [
+const MATCHES = [
 
   // ====================================================
   // GROUP STAGE — Group D: France, Brazil, South Korea, South Africa
@@ -793,8 +789,8 @@ const MOCK_MATCHES = [
 
   // ====================================================
   // QUARTER-FINALS — all completed
-  // France beats Portugal, Brazil beats Netherlands,
-  // Argentina beats Mexico, Spain beats England
+  // France beats Portugal, Spain beats Netherlands,
+  // Argentina beats Mexico, England beats Brazil
   // ====================================================
   {
     id: 54, round: "Quarter-finals",
@@ -811,14 +807,14 @@ const MOCK_MATCHES = [
   },
   {
     id: 55, round: "Quarter-finals",
-    homeTeam: { id: 14, name: "Brazil",      code: "BRA", flagCode: "br" },
+    homeTeam: { id: 17, name: "Spain",       code: "ESP", flagCode: "es" },
     awayTeam: { id: 26, name: "Netherlands", code: "NED", flagCode: "nl" },
     homeScore: 2, awayScore: 1, status: "completed",
     datetime: "2026-07-13T23:00:00Z",
     events: [
-      { type: "goal", team: "home", player: "Raphinha",     minute: 21 },
-      { type: "goal", team: "away", player: "V. van Dijk",  minute: 66 },
-      { type: "goal", team: "home", player: "Vinicius Jr.", minute: 86 },
+      { type: "goal", team: "home", player: "L. Yamal",    minute: 18 },
+      { type: "goal", team: "away", player: "V. van Dijk", minute: 55 },
+      { type: "goal", team: "home", player: "M. Oyarzabal", minute: 88 },
     ],
   },
   {
@@ -834,64 +830,68 @@ const MOCK_MATCHES = [
   },
   {
     id: 57, round: "Quarter-finals",
-    homeTeam: { id: 17, name: "Spain",   code: "ESP", flagCode: "es" },
-    awayTeam: { id: 21, name: "England", code: "ENG", flagCode: "gb-eng" },
-    homeScore: 1, awayScore: 0, status: "completed",
+    homeTeam: { id: 21, name: "England", code: "ENG", flagCode: "gb-eng" },
+    awayTeam: { id: 14, name: "Brazil",  code: "BRA", flagCode: "br" },
+    homeScore: 2, awayScore: 1, status: "completed",
     datetime: "2026-07-14T23:00:00Z",
     events: [
-      { type: "goal", team: "home", player: "L. Yamal", minute: 77 },
+      { type: "goal", team: "home", player: "J. Bellingham", minute: 22 },
+      { type: "goal", team: "away", player: "Vinicius Jr.",  minute: 59 },
+      { type: "goal", team: "home", player: "B. Saka",       minute: 90 },
     ],
   },
 
   // ====================================================
   // SEMI-FINALS — both completed
-  // France beats Brazil 2-0, Argentina beats Spain 1-0
+  // Spain beats France 2-0, Argentina beats England 2-1
   // ====================================================
   {
     id: 58, round: "Semi-finals",
-    homeTeam: { id: 13, name: "France", code: "FRA", flagCode: "fr" },
-    awayTeam: { id: 14, name: "Brazil", code: "BRA", flagCode: "br" },
+    homeTeam: { id: 17, name: "Spain",  code: "ESP", flagCode: "es" },
+    awayTeam: { id: 13, name: "France", code: "FRA", flagCode: "fr" },
     homeScore: 2, awayScore: 0, status: "completed",
-    datetime: "2026-07-16T20:00:00Z",
+    datetime: "2026-07-14T20:00:00Z",
     events: [
-      { type: "goal", team: "home", player: "K. Mbappé",    minute: 47 },
-      { type: "goal", team: "home", player: "A. Griezmann", minute: 83 },
+      { type: "goal", team: "home", player: "L. Yamal",     minute: 31 },
+      { type: "goal", team: "home", player: "M. Oyarzabal", minute: 74 },
     ],
   },
   {
     id: 59, round: "Semi-finals",
-    homeTeam: { id: 18, name: "Argentina", code: "ARG", flagCode: "ar" },
-    awayTeam: { id: 17, name: "Spain",     code: "ESP", flagCode: "es" },
-    homeScore: 1, awayScore: 0, status: "completed",
-    datetime: "2026-07-17T20:00:00Z",
+    homeTeam: { id: 21, name: "England",   code: "ENG", flagCode: "gb-eng" },
+    awayTeam: { id: 18, name: "Argentina", code: "ARG", flagCode: "ar" },
+    homeScore: 1, awayScore: 2, status: "completed",
+    datetime: "2026-07-15T20:00:00Z",
     events: [
-      { type: "goal", team: "home", player: "L. Messi", minute: 63 },
+      { type: "goal", team: "away", player: "L. Messi",      minute: 38 },
+      { type: "goal", team: "home", player: "J. Bellingham", minute: 55 },
+      { type: "goal", team: "away", player: "J. Álvarez",    minute: 82 },
     ],
   },
 
   // ====================================================
   // 3rd PLACE PLAY-OFF — scheduled
-  // Brazil vs Spain
+  // France vs England · Sat Jul 18 · 5:00 PM ET
   // ====================================================
   {
     id: 60, round: "Third Place Play-off",
-    homeTeam: { id: 14, name: "Brazil", code: "BRA", flagCode: "br" },
-    awayTeam: { id: 17, name: "Spain",  code: "ESP", flagCode: "es" },
+    homeTeam: { id: 13, name: "France",  code: "FRA", flagCode: "fr" },
+    awayTeam: { id: 21, name: "England", code: "ENG", flagCode: "gb-eng" },
     homeScore: null, awayScore: null, status: "scheduled",
-    datetime: "2026-07-21T20:00:00Z",
+    datetime: "2026-07-18T21:00:00Z",
     events: [],
   },
 
   // ====================================================
   // FINAL — scheduled
-  // France vs Argentina (2022 WC Final rematch!)
+  // Spain vs Argentina · Sun Jul 19 · 3:00 PM ET
   // ====================================================
   {
     id: 61, round: "Final",
-    homeTeam: { id: 13, name: "France",    code: "FRA", flagCode: "fr" },
+    homeTeam: { id: 17, name: "Spain",     code: "ESP", flagCode: "es" },
     awayTeam: { id: 18, name: "Argentina", code: "ARG", flagCode: "ar" },
     homeScore: null, awayScore: null, status: "scheduled",
-    datetime: "2026-07-22T20:00:00Z",
+    datetime: "2026-07-19T19:00:00Z",
     events: [],
   },
 ];
@@ -999,14 +999,14 @@ const MOCK_COUNTRY_POINTS = {
 
 // ============================================================
 // LEADERBOARD
-// Built by combining STAFF_PICKS with MOCK_COUNTRY_POINTS.
+// Built by combining STAFF_PICKS with COUNTRY_POINTS.
 // In production, this comes from the Apps Script output tab.
 // ============================================================
 function buildMockLeaderboard() {
   // Build leaderboard entries from staff picks and country points
   const entries = STAFF_PICKS.map((staff) => {
     const countryData = MOCK_COUNTRY_POINTS[staff.country] || { points: 0, isLive: false };
-    const team = MOCK_TEAMS.find((t) => t.name === staff.country);
+    const team = TEAMS.find((t) => t.name === staff.country);
     return {
       name:        staff.name,
       country:     staff.country,
@@ -1051,7 +1051,7 @@ function getStaffForCountry(countryName) {
 
 // Returns a team object by name (case-insensitive).
 function getTeamByName(name) {
-  return MOCK_TEAMS.find(
+  return TEAMS.find(
     (t) => t.name.toLowerCase() === name.toLowerCase()
   );
 }

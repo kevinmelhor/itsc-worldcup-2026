@@ -1341,6 +1341,77 @@
       background: linear-gradient(90deg, rgba(0,200,83,0.12) 0%, transparent 80%);
     }
 
+    /* ── Face-off card (Final / 3rd Place) ── */
+    .bk-faceoff {
+      border-radius: 10px; border: 1px solid var(--border);
+      overflow: hidden; background: var(--bg-panel-alt);
+    }
+    .bk-faceoff.is-final {
+      border-color: rgba(255,215,0,0.5);
+      box-shadow: 0 0 28px rgba(255,215,0,0.10);
+    }
+    .bk-faceoff.is-third {
+      border-color: rgba(205,127,50,0.45);
+      box-shadow: 0 0 16px rgba(205,127,50,0.08);
+    }
+    .bk-faceoff-header {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 9px 16px; font-size: 9px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 1.4px;
+      background: rgba(0,0,0,0.22); border-bottom: 1px solid var(--border);
+    }
+    .bk-faceoff.is-final  .bk-faceoff-header { color: var(--gold); }
+    .bk-faceoff.is-third  .bk-faceoff-header { color: #cd7f32; }
+    .bk-faceoff-body {
+      display: grid; grid-template-columns: 1fr 90px 1fr; min-height: 180px;
+    }
+    .bk-faceoff-side {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 7px; padding: 22px 14px; text-align: center;
+    }
+    .bk-faceoff-side.winner { background: rgba(0,200,83,0.05); }
+    .bk-faceoff-flag-lg { width: 56px; height: auto; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.35); }
+    .bk-faceoff-country {
+      font-size: 17px; font-weight: 800; color: var(--text-primary); line-height: 1;
+    }
+    .bk-faceoff-country.is-pick { color: #ff8fa3; }
+    .bk-faceoff-country.is-winner { color: var(--positive); }
+    .bk-faceoff-pickers { font-size: 9px; color: var(--scarlet); font-weight: 600; line-height: 1.5; }
+    .bk-faceoff-challenge-pts {
+      font-size: 11px; font-weight: 700; color: var(--text-muted); margin-top: 2px;
+    }
+    .bk-faceoff-result-score {
+      font-size: 26px; font-weight: 900; color: var(--positive);
+      font-variant-numeric: tabular-nums; line-height: 1;
+    }
+    .bk-faceoff-center {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 8px; padding: 14px 6px; text-align: center;
+      border-left: 1px solid var(--border); border-right: 1px solid var(--border);
+    }
+    .bk-faceoff-vs {
+      font-size: 20px; font-weight: 900; color: rgba(255,255,255,0.18);
+      letter-spacing: 2px;
+    }
+    .bk-faceoff-score-vs {
+      font-size: 28px; font-weight: 900; color: var(--text-primary);
+      font-variant-numeric: tabular-nums; line-height: 1;
+    }
+    .bk-faceoff-date {
+      font-size: 9px; color: var(--text-muted); font-weight: 600; line-height: 1.5;
+    }
+    .bk-faceoff-stake {
+      font-size: 8px; font-weight: 700; color: var(--gold); text-transform: uppercase;
+      letter-spacing: 0.8px; line-height: 1.5;
+    }
+    .bk-faceoff-pens-note {
+      font-size: 8px; color: var(--text-muted); font-weight: 500; margin-top: -2px;
+    }
+    .bk-faceoff-events {
+      padding: 8px 14px; border-top: 1px solid var(--border);
+      background: rgba(0,0,0,0.18); font-size: 10px;
+    }
+
     /* ============================================================
        RESPONSIVE BREAKPOINTS
     ============================================================ */
@@ -1924,10 +1995,10 @@
      *
      * Live mode: pulls match data from the BALLDONTLIE API and calculates
      * points directly in the browser. No Apps Script needed for display.
-     * Toggle USE_MOCK_DATA to fall back to data.js for testing.
+     * Set USE_MOCK_DATA = true to use local fallback data (data.js) instead of the live API.
      */
 
-    const USE_MOCK_DATA = true; // ← set to false before deploying to production
+    const USE_MOCK_DATA = false;
     const API_KEY       = "b29f8214-03a4-4d75-8d1b-e2f2f46e40a3";
     const API_BASE      = "https://api.balldontlie.io";
 
@@ -2144,9 +2215,18 @@
       const awayCode   = m.away_team?.country_code || "";
       const groupLetter = (m.group?.name || "").replace("Group ", "").trim();
       // Knockout round name — try every field the BALLDONTLIE API might use
-      const roundName   = m.stage?.name || m.round?.name ||
-                          m.stage_name  || m.round_name  ||
-                          m.tournament_round?.name || m.phase?.name || "";
+      let roundName   = m.stage?.name || m.round?.name ||
+                        m.stage_name  || m.round_name  ||
+                        m.tournament_round?.name || m.phase?.name || "";
+      // Normalize API round names to our internal names
+      const rn = roundName.toLowerCase();
+      if (rn === "quarterfinal" || rn === "quarter-final" || rn === "quarter finals") roundName = "Quarter-finals";
+      else if (rn === "semifinal" || rn === "semi-final" || rn === "semi finals")     roundName = "Semi-finals";
+      else if (rn.includes("3rd") || rn.includes("third place") || rn.includes("third-place")) roundName = "Third Place Play-off";
+      else if (rn === "final")                                                         roundName = "Final";
+      else if (rn === "round of 16")                                                  roundName = "Round of 16";
+      else if (rn === "round of 32")                                                  roundName = "Round of 32";
+      else if (rn.includes("group"))                                                  roundName = "Group Stage";
 
       return {
         id:        m.id,
@@ -2586,9 +2666,9 @@
     async function loadData() {
       if (USE_MOCK_DATA) {
         // Set matches first — buildLeaderboard reads state.matches internally
-        state.matches       = MOCK_MATCHES;
+        state.matches       = MATCHES;
         state.staffPicks    = STAFF_PICKS;
-        const mockPoints    = calculateCountryPoints(MOCK_MATCHES);
+        const mockPoints    = calculateCountryPoints(MATCHES);
         state.countryPoints = mockPoints;
         state.leaderboard   = buildLeaderboard(STAFF_PICKS, mockPoints);
         return;
@@ -2641,7 +2721,14 @@
 
       } catch (err) {
         console.error("API fetch failed:", err);
-        // Keep showing whatever state was last successfully loaded
+        // If we have no data yet (e.g. CORS on localhost), fall back to local data
+        if (!state.matches.length) {
+          state.matches       = MATCHES;
+          state.staffPicks    = STAFF_PICKS;
+          const pts           = calculateCountryPoints(MATCHES);
+          state.countryPoints = pts;
+          state.leaderboard   = buildLeaderboard(STAFF_PICKS, pts);
+        }
       }
     }
 
@@ -3341,14 +3428,15 @@
       }
 
       // ── Render selected round's matches ───────────────────────
-      const matchList   = rounds[showRound];
-      const isSingleCol = matchList.length <= 2
-        || showRound.toLowerCase().includes("semi")
-        || (showRound.toLowerCase().includes("final") && !showRound.toLowerCase().includes("semi") && !showRound.toLowerCase().includes("third"));
-      const gridClass   = isSingleCol ? "single-col" : "";
+      const matchList    = rounds[showRound];
       const isFinalRound = showRound.toLowerCase().includes("final")
         && !showRound.toLowerCase().includes("semi")
         && !showRound.toLowerCase().includes("third");
+      const isThirdPlace = showRound.toLowerCase().includes("third");
+      const isFaceoffRound = (isFinalRound || isThirdPlace) && matchList.length === 1;
+      const isSingleCol  = isFaceoffRound || matchList.length <= 2
+        || showRound.toLowerCase().includes("semi");
+      const gridClass    = isSingleCol ? "single-col" : "";
 
       const matchesHtml = matchList.map(m => {
         const isLive      = m.status === "live";
@@ -3357,8 +3445,6 @@
 
         const hName = m.homeTeam?.name || "TBD";
         const aName = m.awayTeam?.name || "TBD";
-        const hFlag = m.homeTeam?.flagCode ? flagImg(m.homeTeam.flagCode, 20, 15) : "";
-        const aFlag = m.awayTeam?.flagCode ? flagImg(m.awayTeam.flagCode, 20, 15) : "";
         const hPick = pickedCountries.has(hName);
         const aPick = pickedCountries.has(aName);
         const hStaff = state.staffPicks.filter(p => p.country === hName).map(p => p.name.split(" ")[0]).join(", ");
@@ -3378,18 +3464,61 @@
         const aScore = hasScore ? (m.awayScore ?? 0) : null;
         const hPen   = (isCompleted && m.homePenalties != null) ? ` (${m.homePenalties})` : "";
         const aPen   = (isCompleted && m.awayPenalties != null) ? ` (${m.awayPenalties})` : "";
-
-        const dateStr  = m.datetime ? new Date(m.datetime).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
-        const timeStr  = m.datetime ? formatKickoff(m.datetime) : "";
+        const dateStr   = m.datetime ? new Date(m.datetime).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
+        const timeStr   = m.datetime ? formatKickoff(m.datetime) : "";
         const timeLabel = dateStr ? `${dateStr} · ${timeStr}` : "";
-
         const wentToPens = isCompleted && m.homePenalties != null && m.awayPenalties != null;
         const ftLabel = wentToPens ? "FT · Pens" : "FT";
 
+        // ── Face-off layout for Final & 3rd Place ─────────────
+        if (isFaceoffRound) {
+          const hFlagLg = m.homeTeam?.flagCode ? `<img class="bk-faceoff-flag-lg" src="https://flagcdn.com/w80/${m.homeTeam.flagCode}.png" alt="${hName}">` : "";
+          const aFlagLg = m.awayTeam?.flagCode ? `<img class="bk-faceoff-flag-lg" src="https://flagcdn.com/w80/${m.awayTeam.flagCode}.png" alt="${aName}">` : "";
+          const hPts = state.countryPoints[hName]?.points ?? 0;
+          const aPts = state.countryPoints[aName]?.points ?? 0;
+          const headerLabel = isFinalRound
+            ? (isLive ? "🏆 WORLD CUP FINAL · LIVE" : "🏆 WORLD CUP FINAL")
+            : (isLive ? "🥉 3RD PLACE · LIVE" : "🥉 THIRD PLACE PLAY-OFF");
+          const stakeText = isFinalRound && !isCompleted
+            ? `+${POINTS.WIN_FINAL} pts to winner` : "";
+
+          const centerHtml = hasScore
+            ? `<div class="bk-faceoff-score-vs">${hScore}–${aScore}</div>
+               ${wentToPens ? `<div class="bk-faceoff-pens-note">Pen: ${m.homePenalties}–${m.awayPenalties}</div>` : ""}
+               <div class="bk-faceoff-date" style="margin-top:4px">${isCompleted ? ftLabel : "● LIVE"}</div>`
+            : `<div class="bk-faceoff-vs">VS</div>
+               <div class="bk-faceoff-date">${timeLabel}</div>
+               ${stakeText ? `<div class="bk-faceoff-stake">${stakeText}</div>` : ""}`;
+
+          return `
+            <div class="bk-faceoff${isFinalRound ? " is-final" : " is-third"}">
+              <div class="bk-faceoff-header">${headerLabel}${isLive ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--live-green);margin-left:4px;animation:pulse-live 1.5s ease-in-out infinite"></span>` : ""}</div>
+              <div class="bk-faceoff-body">
+                <div class="bk-faceoff-side${hWin ? " winner" : ""}">
+                  ${hFlagLg}
+                  <div class="bk-faceoff-country${hPick ? " is-pick" : ""}${hWin ? " is-winner" : ""}">${hName}</div>
+                  ${hStaff ? `<div class="bk-faceoff-pickers">${hStaff}</div>` : '<div class="bk-faceoff-pickers" style="color:var(--text-muted);font-style:italic">No picks</div>'}
+                  <div class="bk-faceoff-challenge-pts">${hPts} pts</div>
+                </div>
+                <div class="bk-faceoff-center">${centerHtml}</div>
+                <div class="bk-faceoff-side${aWin ? " winner" : ""}">
+                  ${aFlagLg}
+                  <div class="bk-faceoff-country${aPick ? " is-pick" : ""}${aWin ? " is-winner" : ""}">${aName}</div>
+                  ${aStaff ? `<div class="bk-faceoff-pickers">${aStaff}</div>` : '<div class="bk-faceoff-pickers" style="color:var(--text-muted);font-style:italic">No picks</div>'}
+                  <div class="bk-faceoff-challenge-pts">${aPts} pts</div>
+                </div>
+              </div>
+              ${isCompleted ? `<div class="bk-faceoff-events">${buildBkDetails(m)}</div>` : ""}
+            </div>`;
+        }
+
+        // ── Standard match card ────────────────────────────────
+        const hFlag = m.homeTeam?.flagCode ? flagImg(m.homeTeam.flagCode, 20, 15) : "";
+        const aFlag = m.awayTeam?.flagCode ? flagImg(m.awayTeam.flagCode, 20, 15) : "";
         return `
           <div class="bk-match${isLive ? " is-live" : ""}${isFinalRound ? " is-final" : ""}" onclick="this.classList.toggle('expanded')">
             <div class="bk-match-time">
-              <span>${isLive ? "" : (isCompleted ? `${timeLabel}` : timeLabel)}</span>
+              <span>${timeLabel}</span>
               <span style="display:flex;align-items:center;gap:4px">
                 ${isCompleted ? `<span style="font-size:8px;font-weight:700;color:var(--text-muted)">${ftLabel}</span>` : ""}
                 ${isLive ? `<span class="bk-live-badge">● LIVE</span>` : ""}
