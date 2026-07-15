@@ -1927,7 +1927,7 @@
      * Toggle USE_MOCK_DATA to fall back to data.js for testing.
      */
 
-    const USE_MOCK_DATA = false;
+    const USE_MOCK_DATA = true; // ← set to false before deploying to production
     const API_KEY       = "b29f8214-03a4-4d75-8d1b-e2f2f46e40a3";
     const API_BASE      = "https://api.balldontlie.io";
 
@@ -2585,10 +2585,12 @@
     // ============================================================
     async function loadData() {
       if (USE_MOCK_DATA) {
-        state.leaderboard   = MOCK_LEADERBOARD;
+        // Set matches first — buildLeaderboard reads state.matches internally
         state.matches       = MOCK_MATCHES;
-        state.countryPoints = MOCK_COUNTRY_POINTS;
         state.staffPicks    = STAFF_PICKS;
+        const mockPoints    = calculateCountryPoints(MOCK_MATCHES);
+        state.countryPoints = mockPoints;
+        state.leaderboard   = buildLeaderboard(STAFF_PICKS, mockPoints);
         return;
       }
 

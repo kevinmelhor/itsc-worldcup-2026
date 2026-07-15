@@ -147,6 +147,8 @@ const STAFF_PICKS = [
 // ============================================================
 // MATCHES
 // Mimics the /fifa/worldcup/v1/games endpoint.
+// Last synced: July 15, 2026 — Semi-finals complete.
+// Remaining: 3rd Place Play-off + Final (both scheduled).
 //
 // status values:
 //   "completed"  = final score, all events recorded
@@ -160,171 +162,736 @@ const STAFF_PICKS = [
 //   minute: integer
 // ============================================================
 const MOCK_MATCHES = [
-  // ---- COMPLETED MATCHES ----
 
+  // ====================================================
+  // GROUP STAGE — Group D: France, Brazil, South Korea, South Africa
+  // Result: France 1st (W3D0L0), Brazil 2nd (W2D0L1)
+  // ====================================================
   {
-    id: 1,
-    group: "A",
-    matchday: 1,
-    homeTeam: { id: 1,  name: "USA",     code: "USA", flagCode: "us"  },
-    awayTeam: { id: 2,  name: "Uruguay", code: "URU", flagCode: "uy"  },
-    homeScore: 2,
-    awayScore: 1,
-    status: "completed",
+    id: 1, group: "D", matchday: 1,
+    homeTeam: { id: 13, name: "France",       code: "FRA", flagCode: "fr" },
+    awayTeam: { id: 16, name: "South Africa", code: "RSA", flagCode: "za" },
+    homeScore: 2, awayScore: 0, status: "completed",
     datetime: "2026-06-11T17:00:00Z",
-    venue: "SoFi Stadium, Los Angeles",
     events: [
-      { type: "goal",        team: "home", player: "C. Pulisic",  minute: 23 },
-      { type: "goal",        team: "away", player: "D. Nunez",    minute: 55 },
-      { type: "goal",        team: "home", player: "F. Weah",     minute: 82 },
+      { type: "goal", team: "home", player: "K. Mbappé",   minute: 18 },
+      { type: "goal", team: "home", player: "O. Dembélé",  minute: 67 },
     ],
   },
-
   {
-    id: 2,
-    group: "B",
-    matchday: 1,
-    homeTeam: { id: 5,  name: "Mexico",  code: "MEX", flagCode: "mx"  },
-    awayTeam: { id: 8,  name: "Senegal", code: "SEN", flagCode: "sn"  },
-    homeScore: 3,
-    awayScore: 0,
-    status: "completed",
+    id: 2, group: "D", matchday: 1,
+    homeTeam: { id: 14, name: "Brazil",      code: "BRA", flagCode: "br" },
+    awayTeam: { id: 15, name: "South Korea", code: "KOR", flagCode: "kr" },
+    homeScore: 3, awayScore: 0, status: "completed",
     datetime: "2026-06-11T20:00:00Z",
-    venue: "Estadio Azteca, Mexico City",
     events: [
-      { type: "goal",        team: "home", player: "H. Lozano",   minute: 12 },
-      { type: "goal",        team: "home", player: "R. Jimenez",  minute: 35 },
-      { type: "goal",        team: "home", player: "A. Vega",     minute: 78 },
+      { type: "goal", team: "home", player: "Vinicius Jr.", minute: 23 },
+      { type: "goal", team: "home", player: "Rodrygo",      minute: 45 },
+      { type: "goal", team: "home", player: "L. Paquetá",   minute: 78 },
+    ],
+  },
+  {
+    id: 3, group: "D", matchday: 2,
+    homeTeam: { id: 13, name: "France", code: "FRA", flagCode: "fr" },
+    awayTeam: { id: 14, name: "Brazil", code: "BRA", flagCode: "br" },
+    homeScore: 3, awayScore: 1, status: "completed",
+    datetime: "2026-06-15T20:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "K. Mbappé",     minute: 12 },
+      { type: "goal", team: "away", player: "Vinicius Jr.",  minute: 38 },
+      { type: "goal", team: "home", player: "O. Dembélé",    minute: 55 },
+      { type: "goal", team: "home", player: "A. Tchouaméni", minute: 82 },
+    ],
+  },
+  {
+    id: 4, group: "D", matchday: 2,
+    homeTeam: { id: 16, name: "South Africa", code: "RSA", flagCode: "za" },
+    awayTeam: { id: 15, name: "South Korea",  code: "KOR", flagCode: "kr" },
+    homeScore: 1, awayScore: 1, status: "completed",
+    datetime: "2026-06-15T17:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "P. Motsepe",    minute: 33 },
+      { type: "goal", team: "away", player: "S. Min-Hyeok",  minute: 71 },
+    ],
+  },
+  {
+    id: 5, group: "D", matchday: 3,
+    homeTeam: { id: 13, name: "France",      code: "FRA", flagCode: "fr" },
+    awayTeam: { id: 15, name: "South Korea", code: "KOR", flagCode: "kr" },
+    homeScore: 1, awayScore: 0, status: "completed",
+    datetime: "2026-06-19T20:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "K. Mbappé", minute: 59 },
+    ],
+  },
+  {
+    id: 6, group: "D", matchday: 3,
+    homeTeam: { id: 14, name: "Brazil",       code: "BRA", flagCode: "br" },
+    awayTeam: { id: 16, name: "South Africa", code: "RSA", flagCode: "za" },
+    homeScore: 2, awayScore: 0, status: "completed",
+    datetime: "2026-06-19T20:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "Raphinha",     minute: 27 },
+      { type: "goal", team: "home", player: "Vinicius Jr.", minute: 80 },
     ],
   },
 
+  // ====================================================
+  // GROUP STAGE — Group E: Spain, Argentina, Japan, Ivory Coast
+  // Result: Spain 1st (W2D1L0), Argentina 2nd (W2D1L0)
+  // ====================================================
   {
-    id: 3,
-    group: "D",
-    matchday: 1,
-    homeTeam: { id: 13, name: "France",  code: "FRA", flagCode: "fr"  },
-    awayTeam: { id: 14, name: "Brazil",  code: "BRA", flagCode: "br"  },
-    homeScore: 1,
-    awayScore: 1,
-    status: "completed",
-    datetime: "2026-06-12T16:00:00Z",
-    venue: "MetLife Stadium, New Jersey",
-    events: [
-      { type: "goal",        team: "home", player: "K. Mbappe",   minute: 44 },
-      { type: "goal",        team: "away", player: "Vinicius Jr", minute: 73 },
-    ],
-  },
-
-  {
-    id: 4,
-    group: "E",
-    matchday: 1,
-    homeTeam: { id: 17, name: "Spain",       code: "ESP", flagCode: "es"  },
-    awayTeam: { id: 20, name: "Ivory Coast", code: "CIV", flagCode: "ci"  },
-    homeScore: 2,
-    awayScore: 0,
-    status: "completed",
+    id: 7, group: "E", matchday: 1,
+    homeTeam: { id: 17, name: "Spain",       code: "ESP", flagCode: "es" },
+    awayTeam: { id: 20, name: "Ivory Coast", code: "CIV", flagCode: "ci" },
+    homeScore: 2, awayScore: 0, status: "completed",
     datetime: "2026-06-12T19:00:00Z",
-    venue: "AT&T Stadium, Dallas",
     events: [
-      { type: "goal",        team: "home", player: "L. Yamal",    minute: 28 },
-      { type: "yellow_card", team: "home", player: "R. Le Normand", minute: 55 },
-      { type: "goal",        team: "home", player: "A. Morata",   minute: 80 },
+      { type: "goal", team: "home", player: "L. Yamal",  minute: 28 },
+      { type: "goal", team: "home", player: "A. Morata", minute: 80 },
+    ],
+  },
+  {
+    id: 8, group: "E", matchday: 1,
+    homeTeam: { id: 18, name: "Argentina", code: "ARG", flagCode: "ar" },
+    awayTeam: { id: 19, name: "Japan",     code: "JPN", flagCode: "jp" },
+    homeScore: 2, awayScore: 1, status: "completed",
+    datetime: "2026-06-12T22:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "L. Messi",   minute: 17 },
+      { type: "goal", team: "away", player: "A. Ueda",    minute: 44 },
+      { type: "goal", team: "home", player: "J. Álvarez", minute: 76 },
+    ],
+  },
+  {
+    id: 9, group: "E", matchday: 2,
+    homeTeam: { id: 17, name: "Spain",     code: "ESP", flagCode: "es" },
+    awayTeam: { id: 18, name: "Argentina", code: "ARG", flagCode: "ar" },
+    homeScore: 1, awayScore: 1, status: "completed",
+    datetime: "2026-06-16T20:00:00Z",
+    events: [
+      { type: "goal",        team: "home", player: "D. Olmo",         minute: 35 },
+      { type: "goal",        team: "away", player: "L. Messi",        minute: 68 },
+      { type: "yellow_card", team: "home", player: "R. Le Normand",   minute: 45 },
+    ],
+  },
+  {
+    id: 10, group: "E", matchday: 2,
+    homeTeam: { id: 19, name: "Japan",       code: "JPN", flagCode: "jp" },
+    awayTeam: { id: 20, name: "Ivory Coast", code: "CIV", flagCode: "ci" },
+    homeScore: 2, awayScore: 0, status: "completed",
+    datetime: "2026-06-16T17:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "K. Mitoma", minute: 29 },
+      { type: "goal", team: "home", player: "A. Ueda",   minute: 71 },
+    ],
+  },
+  {
+    id: 11, group: "E", matchday: 3,
+    homeTeam: { id: 17, name: "Spain", code: "ESP", flagCode: "es" },
+    awayTeam: { id: 19, name: "Japan", code: "JPN", flagCode: "jp" },
+    homeScore: 3, awayScore: 0, status: "completed",
+    datetime: "2026-06-20T20:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "L. Yamal",  minute: 11 },
+      { type: "goal", team: "home", player: "A. Morata", minute: 43 },
+      { type: "goal", team: "home", player: "D. Olmo",   minute: 88 },
+    ],
+  },
+  {
+    id: 12, group: "E", matchday: 3,
+    homeTeam: { id: 18, name: "Argentina",   code: "ARG", flagCode: "ar" },
+    awayTeam: { id: 20, name: "Ivory Coast", code: "CIV", flagCode: "ci" },
+    homeScore: 3, awayScore: 0, status: "completed",
+    datetime: "2026-06-20T20:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "L. Messi",        minute: 22 },
+      { type: "goal", team: "home", player: "J. Álvarez",      minute: 56 },
+      { type: "goal", team: "home", player: "A. Mac Allister", minute: 79 },
     ],
   },
 
+  // ====================================================
+  // GROUP STAGE — Group B: Mexico, Jamaica, Ecuador, Senegal
+  // Result: Mexico 1st (W2D1L0), Ecuador 2nd (W2D1L0)
+  // ====================================================
   {
-    id: 5,
-    group: "F",
-    matchday: 1,
-    homeTeam: { id: 21, name: "England", code: "ENG", flagCode: "gb-eng" },
-    awayTeam: { id: 22, name: "Germany", code: "GER", flagCode: "de"     },
-    homeScore: 1,
-    awayScore: 0,
-    status: "completed",
-    datetime: "2026-06-13T14:00:00Z",
-    venue: "Lumen Field, Seattle",
+    id: 13, group: "B", matchday: 1,
+    homeTeam: { id: 5, name: "Mexico",  code: "MEX", flagCode: "mx" },
+    awayTeam: { id: 8, name: "Senegal", code: "SEN", flagCode: "sn" },
+    homeScore: 3, awayScore: 0, status: "completed",
+    datetime: "2026-06-11T22:00:00Z",
     events: [
-      { type: "goal",        team: "home", player: "J. Bellingham", minute: 34 },
+      { type: "goal", team: "home", player: "H. Lozano",  minute: 12 },
+      { type: "goal", team: "home", player: "R. Jiménez", minute: 35 },
+      { type: "goal", team: "home", player: "A. Vega",    minute: 78 },
+    ],
+  },
+  {
+    id: 14, group: "B", matchday: 1,
+    homeTeam: { id: 7, name: "Ecuador", code: "ECU", flagCode: "ec" },
+    awayTeam: { id: 6, name: "Jamaica", code: "JAM", flagCode: "jm" },
+    homeScore: 2, awayScore: 0, status: "completed",
+    datetime: "2026-06-11T19:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "E. Valencia", minute: 31 },
+      { type: "goal", team: "home", player: "M. Caicedo",  minute: 72 },
+    ],
+  },
+  {
+    id: 15, group: "B", matchday: 2,
+    homeTeam: { id: 5, name: "Mexico",  code: "MEX", flagCode: "mx" },
+    awayTeam: { id: 7, name: "Ecuador", code: "ECU", flagCode: "ec" },
+    homeScore: 1, awayScore: 1, status: "completed",
+    datetime: "2026-06-15T22:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "R. Jiménez",  minute: 44 },
+      { type: "goal", team: "away", player: "E. Valencia", minute: 77 },
+    ],
+  },
+  {
+    id: 16, group: "B", matchday: 3,
+    homeTeam: { id: 5, name: "Mexico",  code: "MEX", flagCode: "mx" },
+    awayTeam: { id: 6, name: "Jamaica", code: "JAM", flagCode: "jm" },
+    homeScore: 3, awayScore: 0, status: "completed",
+    datetime: "2026-06-19T22:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "H. Lozano",  minute: 14 },
+      { type: "goal", team: "home", player: "A. Vega",    minute: 50 },
+      { type: "goal", team: "home", player: "R. Jiménez", minute: 85 },
+    ],
+  },
+  {
+    id: 17, group: "B", matchday: 3,
+    homeTeam: { id: 7, name: "Ecuador", code: "ECU", flagCode: "ec" },
+    awayTeam: { id: 8, name: "Senegal", code: "SEN", flagCode: "sn" },
+    homeScore: 2, awayScore: 0, status: "completed",
+    datetime: "2026-06-19T22:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "M. Caicedo",  minute: 38 },
+      { type: "goal", team: "home", player: "E. Valencia", minute: 66 },
     ],
   },
 
+  // ====================================================
+  // GROUP STAGE — Group C: Canada, Portugal, Morocco, Jordan
+  // Result: Portugal 1st (W2D1L0)
+  // ====================================================
   {
-    id: 6,
-    group: "C",
-    matchday: 1,
-    homeTeam: { id: 9,  name: "Canada",   code: "CAN", flagCode: "ca"  },
-    awayTeam: { id: 10, name: "Portugal", code: "POR", flagCode: "pt"  },
-    homeScore: 0,
-    awayScore: 0,
-    status: "completed",
+    id: 18, group: "C", matchday: 1,
+    homeTeam: { id: 9,  name: "Canada",   code: "CAN", flagCode: "ca" },
+    awayTeam: { id: 10, name: "Portugal", code: "POR", flagCode: "pt" },
+    homeScore: 0, awayScore: 0, status: "completed",
     datetime: "2026-06-13T19:00:00Z",
-    venue: "BMO Field, Toronto",
     events: [],
   },
-
-  // ---- LIVE MATCH ----
-
   {
-    id: 7,
-    group: "G",
-    matchday: 1,
-    homeTeam: { id: 25, name: "Italy",       code: "ITA", flagCode: "it"  },
-    awayTeam: { id: 26, name: "Netherlands", code: "NED", flagCode: "nl"  },
-    homeScore: 1,
-    awayScore: 1,
-    status: "live",
-    liveMinute: 67,
-    datetime: "2026-06-14T13:00:00Z",
-    venue: "Hard Rock Stadium, Miami",
+    id: 19, group: "C", matchday: 2,
+    homeTeam: { id: 10, name: "Portugal", code: "POR", flagCode: "pt" },
+    awayTeam: { id: 12, name: "Jordan",   code: "JOR", flagCode: "jo" },
+    homeScore: 2, awayScore: 0, status: "completed",
+    datetime: "2026-06-17T17:00:00Z",
     events: [
-      { type: "goal",        team: "home", player: "F. Chiesa",    minute: 23 },
-      { type: "yellow_card", team: "away", player: "V. van Dijk",  minute: 45 },
-      { type: "goal",        team: "away", player: "M. Depay",     minute: 58 },
+      { type: "goal", team: "home", player: "C. Ronaldo",   minute: 28 },
+      { type: "goal", team: "home", player: "B. Fernandes", minute: 74 },
+    ],
+  },
+  {
+    id: 20, group: "C", matchday: 3,
+    homeTeam: { id: 10, name: "Portugal", code: "POR", flagCode: "pt" },
+    awayTeam: { id: 11, name: "Morocco",  code: "MAR", flagCode: "ma" },
+    homeScore: 2, awayScore: 0, status: "completed",
+    datetime: "2026-06-21T20:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "B. Fernandes", minute: 33 },
+      { type: "goal", team: "home", player: "R. Leão",      minute: 81 },
     ],
   },
 
-  // ---- SCHEDULED (upcoming today) ----
-
+  // ====================================================
+  // GROUP STAGE — Group F: England, Germany, Colombia, Nigeria
+  // Result: England 1st, Colombia 2nd, Germany 3rd (best 3rd)
+  // ====================================================
   {
-    id: 8,
-    group: "H",
-    matchday: 1,
-    homeTeam: { id: 29, name: "Croatia", code: "CRO", flagCode: "hr"  },
-    awayTeam: { id: 32, name: "Egypt",   code: "EGY", flagCode: "eg"  },
-    homeScore: null,
-    awayScore: null,
-    status: "scheduled",
-    datetime: "2026-06-14T19:00:00Z",
-    venue: "NRG Stadium, Houston",
+    id: 21, group: "F", matchday: 1,
+    homeTeam: { id: 23, name: "Colombia", code: "COL", flagCode: "co" },
+    awayTeam: { id: 22, name: "Germany",  code: "GER", flagCode: "de" },
+    homeScore: 1, awayScore: 0, status: "completed",
+    datetime: "2026-06-12T17:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "L. Díaz", minute: 55 },
+    ],
+  },
+  {
+    id: 22, group: "F", matchday: 2,
+    homeTeam: { id: 21, name: "England", code: "ENG", flagCode: "gb-eng" },
+    awayTeam: { id: 22, name: "Germany", code: "GER", flagCode: "de" },
+    homeScore: 1, awayScore: 0, status: "completed",
+    datetime: "2026-06-16T14:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "J. Bellingham", minute: 34 },
+    ],
+  },
+  {
+    id: 23, group: "F", matchday: 3,
+    homeTeam: { id: 21, name: "England",  code: "ENG", flagCode: "gb-eng" },
+    awayTeam: { id: 23, name: "Colombia", code: "COL", flagCode: "co" },
+    homeScore: 2, awayScore: 1, status: "completed",
+    datetime: "2026-06-20T17:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "B. Saka",        minute: 25 },
+      { type: "goal", team: "away", player: "L. Díaz",        minute: 63 },
+      { type: "goal", team: "home", player: "J. Bellingham",  minute: 87 },
+    ],
+  },
+
+  // ====================================================
+  // GROUP STAGE — Group K: Sweden (showing their advancement)
+  // Result: Sweden 1st (W2D1L0)
+  // ====================================================
+  {
+    id: 24, group: "K", matchday: 1,
+    homeTeam: { id: 50, name: "Sweden",  code: "SWE", flagCode: "se" },
+    awayTeam: { id: 42, name: "Ukraine", code: "UKR", flagCode: "ua" },
+    homeScore: 2, awayScore: 0, status: "completed",
+    datetime: "2026-06-13T14:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "A. Isak",       minute: 31 },
+      { type: "goal", team: "home", player: "D. Kulusevski", minute: 78 },
+    ],
+  },
+  {
+    id: 25, group: "K", matchday: 2,
+    homeTeam: { id: 50, name: "Sweden",    code: "SWE", flagCode: "se" },
+    awayTeam: { id: 43, name: "Australia", code: "AUS", flagCode: "au" },
+    homeScore: 1, awayScore: 0, status: "completed",
+    datetime: "2026-06-17T14:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "A. Isak", minute: 61 },
+    ],
+  },
+  {
+    id: 26, group: "K", matchday: 3,
+    homeTeam: { id: 50, name: "Sweden",      code: "SWE", flagCode: "se" },
+    awayTeam: { id: 41, name: "Switzerland", code: "SUI", flagCode: "ch" },
+    homeScore: 1, awayScore: 1, status: "completed",
+    datetime: "2026-06-21T14:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "A. Isak",  minute: 44 },
+      { type: "goal", team: "away", player: "G. Xhaka", minute: 88 },
+    ],
+  },
+
+  // ====================================================
+  // GROUP STAGE — Group L: Iraq (eliminated in groups)
+  // ====================================================
+  {
+    id: 27, group: "L", matchday: 1,
+    homeTeam: { id: 45, name: "Iran", code: "IRN", flagCode: "ir" },
+    awayTeam: { id: 46, name: "Iraq", code: "IRQ", flagCode: "iq" },
+    homeScore: 3, awayScore: 0, status: "completed",
+    datetime: "2026-06-12T14:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "M. Taremi",       minute: 20 },
+      { type: "goal", team: "home", player: "A. Jahanbakhsh",  minute: 44 },
+      { type: "goal", team: "home", player: "M. Taremi",       minute: 77 },
+    ],
+  },
+  {
+    id: 28, group: "L", matchday: 2,
+    homeTeam: { id: 47, name: "New Zealand", code: "NZL", flagCode: "nz" },
+    awayTeam: { id: 46, name: "Iraq",        code: "IRQ", flagCode: "iq" },
+    homeScore: 2, awayScore: 0, status: "completed",
+    datetime: "2026-06-16T14:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "C. Wood", minute: 38 },
+      { type: "goal", team: "home", player: "C. Wood", minute: 71 },
+    ],
+  },
+  {
+    id: 29, group: "L", matchday: 3,
+    homeTeam: { id: 46, name: "Iraq",       code: "IRQ", flagCode: "iq" },
+    awayTeam: { id: 48, name: "Uzbekistan", code: "UZB", flagCode: "uz" },
+    homeScore: 0, awayScore: 0, status: "completed",
+    datetime: "2026-06-20T14:00:00Z",
     events: [],
   },
 
+  // ====================================================
+  // ROUND OF 32 — all completed
+  // ====================================================
   {
-    id: 9,
-    group: "E",
-    matchday: 1,
-    homeTeam: { id: 18, name: "Argentina", code: "ARG", flagCode: "ar"  },
-    awayTeam: { id: 19, name: "Japan",     code: "JPN", flagCode: "jp"  },
-    homeScore: null,
-    awayScore: null,
-    status: "scheduled",
-    datetime: "2026-06-14T22:00:00Z",
-    venue: "Rose Bowl, Pasadena",
+    id: 30, round: "Round of 32",
+    homeTeam: { id: 13, name: "France", code: "FRA", flagCode: "fr" },
+    awayTeam: { id: 50, name: "Sweden", code: "SWE", flagCode: "se" },
+    homeScore: 3, awayScore: 0, status: "completed",
+    datetime: "2026-07-03T20:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "K. Mbappé",     minute: 14 },
+      { type: "goal", team: "home", player: "A. Tchouaméni", minute: 53 },
+      { type: "goal", team: "home", player: "O. Dembélé",    minute: 89 },
+    ],
+  },
+  {
+    id: 31, round: "Round of 32",
+    homeTeam: { id: 14, name: "Brazil", code: "BRA", flagCode: "br" },
+    awayTeam: { id: 19, name: "Japan",  code: "JPN", flagCode: "jp" },
+    homeScore: 2, awayScore: 1, status: "completed",
+    datetime: "2026-07-04T17:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "Vinicius Jr.", minute: 22 },
+      { type: "goal", team: "away", player: "K. Mitoma",   minute: 55 },
+      { type: "goal", team: "home", player: "Raphinha",    minute: 79 },
+    ],
+  },
+  {
+    id: 32, round: "Round of 32",
+    homeTeam: { id: 10, name: "Portugal", code: "POR", flagCode: "pt" },
+    awayTeam: { id: 9,  name: "Canada",   code: "CAN", flagCode: "ca" },
+    homeScore: 2, awayScore: 1, status: "completed",
+    datetime: "2026-07-04T20:00:00Z",
+    events: [
+      { type: "goal", team: "away", player: "A. David",     minute: 28 },
+      { type: "goal", team: "home", player: "C. Ronaldo",   minute: 47 },
+      { type: "goal", team: "home", player: "B. Fernandes", minute: 83 },
+    ],
+  },
+  {
+    id: 33, round: "Round of 32",
+    homeTeam: { id: 11, name: "Morocco",      code: "MAR", flagCode: "ma" },
+    awayTeam: { id: 16, name: "South Africa", code: "RSA", flagCode: "za" },
+    homeScore: 1, awayScore: 0, status: "completed",
+    datetime: "2026-07-05T17:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "A. Hakimi", minute: 61 },
+    ],
+  },
+  {
+    id: 34, round: "Round of 32",
+    homeTeam: { id: 18, name: "Argentina", code: "ARG", flagCode: "ar" },
+    awayTeam: { id: 23, name: "Colombia",  code: "COL", flagCode: "co" },
+    homeScore: 2, awayScore: 0, status: "completed",
+    datetime: "2026-07-05T20:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "L. Messi",   minute: 31 },
+      { type: "goal", team: "home", player: "J. Álvarez", minute: 74 },
+    ],
+  },
+  {
+    id: 35, round: "Round of 32",
+    homeTeam: { id: 39, name: "Paraguay", code: "PAR", flagCode: "py" },
+    awayTeam: { id: 22, name: "Germany",  code: "GER", flagCode: "de" },
+    homeScore: 1, awayScore: 1, homePenalties: 4, awayPenalties: 3,
+    status: "completed",
+    datetime: "2026-07-05T23:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "M. Almirón", minute: 45 },
+      { type: "goal", team: "away", player: "L. Wirtz",   minute: 68 },
+    ],
+  },
+  {
+    id: 36, round: "Round of 32",
+    homeTeam: { id: 17, name: "Spain", code: "ESP", flagCode: "es" },
+    awayTeam: { id: 1,  name: "USA",   code: "USA", flagCode: "us" },
+    homeScore: 1, awayScore: 0, status: "completed",
+    datetime: "2026-07-06T17:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "D. Olmo", minute: 52 },
+    ],
+  },
+  {
+    id: 37, round: "Round of 32",
+    homeTeam: { id: 21, name: "England", code: "ENG", flagCode: "gb-eng" },
+    awayTeam: { id: 24, name: "Nigeria", code: "NGA", flagCode: "ng" },
+    homeScore: 2, awayScore: 0, status: "completed",
+    datetime: "2026-07-06T20:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "B. Saka",       minute: 33 },
+      { type: "goal", team: "home", player: "J. Bellingham", minute: 72 },
+    ],
+  },
+  {
+    id: 38, round: "Round of 32",
+    homeTeam: { id: 5,  name: "Mexico",  code: "MEX", flagCode: "mx" },
+    awayTeam: { id: 2,  name: "Uruguay", code: "URU", flagCode: "uy" },
+    homeScore: 2, awayScore: 1, status: "completed",
+    datetime: "2026-07-07T17:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "H. Lozano",  minute: 19 },
+      { type: "goal", team: "away", player: "D. Núñez",   minute: 47 },
+      { type: "goal", team: "home", player: "R. Jiménez", minute: 81 },
+    ],
+  },
+  {
+    id: 39, round: "Round of 32",
+    homeTeam: { id: 7,  name: "Ecuador", code: "ECU", flagCode: "ec" },
+    awayTeam: { id: 29, name: "Croatia", code: "CRO", flagCode: "hr" },
+    homeScore: 1, awayScore: 0, status: "completed",
+    datetime: "2026-07-07T20:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "E. Valencia", minute: 65 },
+    ],
+  },
+  {
+    id: 40, round: "Round of 32",
+    homeTeam: { id: 26, name: "Netherlands", code: "NED", flagCode: "nl" },
+    awayTeam: { id: 8,  name: "Senegal",     code: "SEN", flagCode: "sn" },
+    homeScore: 2, awayScore: 0, status: "completed",
+    datetime: "2026-07-07T23:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "V. van Dijk", minute: 41 },
+      { type: "goal", team: "home", player: "M. Depay",    minute: 88 },
+    ],
+  },
+  {
+    id: 41, round: "Round of 32",
+    homeTeam: { id: 15, name: "South Korea", code: "KOR", flagCode: "kr" },
+    awayTeam: { id: 37, name: "Serbia",      code: "SRB", flagCode: "rs" },
+    homeScore: 2, awayScore: 1, status: "completed",
+    datetime: "2026-07-08T14:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "S. Min-Hyeok", minute: 23 },
+      { type: "goal", team: "away", player: "D. Vlahović",  minute: 55 },
+      { type: "goal", team: "home", player: "H. Chan-gue",  minute: 90 },
+    ],
+  },
+  {
+    id: 42, round: "Round of 32",
+    homeTeam: { id: 43, name: "Australia", code: "AUS", flagCode: "au" },
+    awayTeam: { id: 33, name: "Poland",    code: "POL", flagCode: "pl" },
+    homeScore: 1, awayScore: 0, status: "completed",
+    datetime: "2026-07-08T17:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "M. Leckie", minute: 78 },
+    ],
+  },
+  {
+    id: 43, round: "Round of 32",
+    homeTeam: { id: 30, name: "Denmark", code: "DEN", flagCode: "dk" },
+    awayTeam: { id: 45, name: "Iran",    code: "IRN", flagCode: "ir" },
+    homeScore: 2, awayScore: 0, status: "completed",
+    datetime: "2026-07-08T20:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "C. Eriksen", minute: 36 },
+      { type: "goal", team: "home", player: "R. Højlund", minute: 67 },
+    ],
+  },
+  {
+    id: 44, round: "Round of 32",
+    homeTeam: { id: 41, name: "Switzerland", code: "SUI", flagCode: "ch" },
+    awayTeam: { id: 3,  name: "Panama",      code: "PAN", flagCode: "pa" },
+    homeScore: 1, awayScore: 0, status: "completed",
+    datetime: "2026-07-08T23:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "G. Xhaka", minute: 54 },
+    ],
+  },
+  {
+    id: 45, round: "Round of 32",
+    homeTeam: { id: 38, name: "Scotland", code: "SCO", flagCode: "gb-sct" },
+    awayTeam: { id: 4,  name: "Belgium",  code: "BEL", flagCode: "be" },
+    homeScore: 1, awayScore: 0, status: "completed",
+    datetime: "2026-07-09T14:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "L. McGregor", minute: 80 },
+    ],
+  },
+
+  // ====================================================
+  // ROUND OF 16 — all completed
+  // ====================================================
+  {
+    id: 46, round: "Round of 16",
+    homeTeam: { id: 13, name: "France",  code: "FRA", flagCode: "fr" },
+    awayTeam: { id: 11, name: "Morocco", code: "MAR", flagCode: "ma" },
+    homeScore: 2, awayScore: 0, status: "completed",
+    datetime: "2026-07-09T20:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "K. Mbappé",    minute: 27 },
+      { type: "goal", team: "home", player: "A. Griezmann", minute: 73 },
+    ],
+  },
+  {
+    id: 47, round: "Round of 16",
+    homeTeam: { id: 14, name: "Brazil",  code: "BRA", flagCode: "br" },
+    awayTeam: { id: 7,  name: "Ecuador", code: "ECU", flagCode: "ec" },
+    homeScore: 3, awayScore: 1, status: "completed",
+    datetime: "2026-07-09T23:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "Vinicius Jr.", minute: 18 },
+      { type: "goal", team: "home", player: "Raphinha",     minute: 44 },
+      { type: "goal", team: "away", player: "E. Valencia",  minute: 60 },
+      { type: "goal", team: "home", player: "Rodrygo",      minute: 87 },
+    ],
+  },
+  {
+    id: 48, round: "Round of 16",
+    homeTeam: { id: 18, name: "Argentina", code: "ARG", flagCode: "ar" },
+    awayTeam: { id: 39, name: "Paraguay",  code: "PAR", flagCode: "py" },
+    homeScore: 2, awayScore: 1, status: "completed",
+    datetime: "2026-07-10T20:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "L. Messi",   minute: 11 },
+      { type: "goal", team: "away", player: "M. Almirón", minute: 49 },
+      { type: "goal", team: "home", player: "J. Álvarez", minute: 92 },
+    ],
+  },
+  {
+    id: 49, round: "Round of 16",
+    homeTeam: { id: 17, name: "Spain",       code: "ESP", flagCode: "es" },
+    awayTeam: { id: 15, name: "South Korea", code: "KOR", flagCode: "kr" },
+    homeScore: 3, awayScore: 0, status: "completed",
+    datetime: "2026-07-10T23:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "L. Yamal",  minute: 22 },
+      { type: "goal", team: "home", player: "A. Morata", minute: 57 },
+      { type: "goal", team: "home", player: "D. Olmo",   minute: 84 },
+    ],
+  },
+  {
+    id: 50, round: "Round of 16",
+    homeTeam: { id: 10, name: "Portugal",    code: "POR", flagCode: "pt" },
+    awayTeam: { id: 41, name: "Switzerland", code: "SUI", flagCode: "ch" },
+    homeScore: 2, awayScore: 0, status: "completed",
+    datetime: "2026-07-11T17:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "B. Fernandes", minute: 33 },
+      { type: "goal", team: "home", player: "C. Ronaldo",   minute: 78 },
+    ],
+  },
+  {
+    id: 51, round: "Round of 16",
+    homeTeam: { id: 26, name: "Netherlands", code: "NED", flagCode: "nl" },
+    awayTeam: { id: 38, name: "Scotland",    code: "SCO", flagCode: "gb-sct" },
+    homeScore: 1, awayScore: 0, status: "completed",
+    datetime: "2026-07-11T20:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "M. Depay", minute: 64 },
+    ],
+  },
+  {
+    id: 52, round: "Round of 16",
+    homeTeam: { id: 5,  name: "Mexico",    code: "MEX", flagCode: "mx" },
+    awayTeam: { id: 43, name: "Australia", code: "AUS", flagCode: "au" },
+    homeScore: 1, awayScore: 0, status: "completed",
+    datetime: "2026-07-12T17:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "H. Lozano", minute: 51 },
+    ],
+  },
+  {
+    id: 53, round: "Round of 16",
+    homeTeam: { id: 21, name: "England", code: "ENG", flagCode: "gb-eng" },
+    awayTeam: { id: 30, name: "Denmark", code: "DEN", flagCode: "dk" },
+    homeScore: 2, awayScore: 0, status: "completed",
+    datetime: "2026-07-12T20:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "J. Bellingham", minute: 38 },
+      { type: "goal", team: "home", player: "B. Saka",       minute: 75 },
+    ],
+  },
+
+  // ====================================================
+  // QUARTER-FINALS — all completed
+  // France beats Portugal, Brazil beats Netherlands,
+  // Argentina beats Mexico, Spain beats England
+  // ====================================================
+  {
+    id: 54, round: "Quarter-finals",
+    homeTeam: { id: 13, name: "France",   code: "FRA", flagCode: "fr" },
+    awayTeam: { id: 10, name: "Portugal", code: "POR", flagCode: "pt" },
+    homeScore: 3, awayScore: 1, status: "completed",
+    datetime: "2026-07-13T20:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "K. Mbappé",    minute: 8  },
+      { type: "goal", team: "home", player: "A. Griezmann", minute: 34 },
+      { type: "goal", team: "away", player: "C. Ronaldo",   minute: 52 },
+      { type: "goal", team: "home", player: "O. Dembélé",   minute: 80 },
+    ],
+  },
+  {
+    id: 55, round: "Quarter-finals",
+    homeTeam: { id: 14, name: "Brazil",      code: "BRA", flagCode: "br" },
+    awayTeam: { id: 26, name: "Netherlands", code: "NED", flagCode: "nl" },
+    homeScore: 2, awayScore: 1, status: "completed",
+    datetime: "2026-07-13T23:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "Raphinha",     minute: 21 },
+      { type: "goal", team: "away", player: "V. van Dijk",  minute: 66 },
+      { type: "goal", team: "home", player: "Vinicius Jr.", minute: 86 },
+    ],
+  },
+  {
+    id: 56, round: "Quarter-finals",
+    homeTeam: { id: 18, name: "Argentina", code: "ARG", flagCode: "ar" },
+    awayTeam: { id: 5,  name: "Mexico",    code: "MEX", flagCode: "mx" },
+    homeScore: 2, awayScore: 0, status: "completed",
+    datetime: "2026-07-14T20:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "L. Messi",        minute: 15 },
+      { type: "goal", team: "home", player: "A. Mac Allister", minute: 70 },
+    ],
+  },
+  {
+    id: 57, round: "Quarter-finals",
+    homeTeam: { id: 17, name: "Spain",   code: "ESP", flagCode: "es" },
+    awayTeam: { id: 21, name: "England", code: "ENG", flagCode: "gb-eng" },
+    homeScore: 1, awayScore: 0, status: "completed",
+    datetime: "2026-07-14T23:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "L. Yamal", minute: 77 },
+    ],
+  },
+
+  // ====================================================
+  // SEMI-FINALS — both completed
+  // France beats Brazil 2-0, Argentina beats Spain 1-0
+  // ====================================================
+  {
+    id: 58, round: "Semi-finals",
+    homeTeam: { id: 13, name: "France", code: "FRA", flagCode: "fr" },
+    awayTeam: { id: 14, name: "Brazil", code: "BRA", flagCode: "br" },
+    homeScore: 2, awayScore: 0, status: "completed",
+    datetime: "2026-07-16T20:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "K. Mbappé",    minute: 47 },
+      { type: "goal", team: "home", player: "A. Griezmann", minute: 83 },
+    ],
+  },
+  {
+    id: 59, round: "Semi-finals",
+    homeTeam: { id: 18, name: "Argentina", code: "ARG", flagCode: "ar" },
+    awayTeam: { id: 17, name: "Spain",     code: "ESP", flagCode: "es" },
+    homeScore: 1, awayScore: 0, status: "completed",
+    datetime: "2026-07-17T20:00:00Z",
+    events: [
+      { type: "goal", team: "home", player: "L. Messi", minute: 63 },
+    ],
+  },
+
+  // ====================================================
+  // 3rd PLACE PLAY-OFF — scheduled
+  // Brazil vs Spain
+  // ====================================================
+  {
+    id: 60, round: "Third Place Play-off",
+    homeTeam: { id: 14, name: "Brazil", code: "BRA", flagCode: "br" },
+    awayTeam: { id: 17, name: "Spain",  code: "ESP", flagCode: "es" },
+    homeScore: null, awayScore: null, status: "scheduled",
+    datetime: "2026-07-21T20:00:00Z",
     events: [],
   },
 
+  // ====================================================
+  // FINAL — scheduled
+  // France vs Argentina (2022 WC Final rematch!)
+  // ====================================================
   {
-    id: 10,
-    group: "I",
-    matchday: 1,
-    homeTeam: { id: 33, name: "Poland",      code: "POL", flagCode: "pl"  },
-    awayTeam: { id: 35, name: "El Salvador", code: "SLV", flagCode: "sv"  },
-    homeScore: null,
-    awayScore: null,
-    status: "scheduled",
-    datetime: "2026-06-15T01:00:00Z",
-    venue: "Lincoln Financial Field, Philadelphia",
+    id: 61, round: "Final",
+    homeTeam: { id: 13, name: "France",    code: "FRA", flagCode: "fr" },
+    awayTeam: { id: 18, name: "Argentina", code: "ARG", flagCode: "ar" },
+    homeScore: null, awayScore: null, status: "scheduled",
+    datetime: "2026-07-22T20:00:00Z",
     events: [],
   },
 ];
