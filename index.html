@@ -404,6 +404,8 @@
       object-fit: cover;
       border-radius: 2px;
       flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
     }
 
     .row-flag-fallback {
@@ -2003,7 +2005,7 @@
     const API_BASE      = "https://api.balldontlie.io";
 
     const REFRESH_INTERVAL_MS  = 60 * 1000;
-    const LIVE_TICK_INTERVAL_MS = 15000; // Mock mode demo only
+    const LIVE_TICK_INTERVAL_MS = 15000; // Used by fallback mode live demo
 
     // ============================================================
     // KNOCKOUT PHASE SWITCH
@@ -2076,7 +2078,7 @@
       staffPicks:           [],
       groupInfo:            {},  // country name -> group letter (e.g. "A")
       groupStandings:       [], // raw standing rows from API
-      liveMinute:           67, // Mock mode only
+      liveMinute:           67, // Fallback mode only
       lastUpdated:          new Date(),
       selectedBracketRound: null,   // null = auto (active round)
       _bracketUserSelected: false,  // true when user manually clicked a tab
@@ -2139,7 +2141,7 @@
     function flagImg(flagCode, w = 32, h = 24, cssClass = "") {
       const src = `https://flagcdn.com/${w}x${h}/${flagCode}.png`;
       return `<img src="${src}" width="${w}" height="${h}" class="${cssClass}"
-                   onerror="this.style.visibility='hidden'" alt="" loading="lazy">`;
+                   onerror="this.style.display='none'" alt="" loading="lazy">`;
     }
 
     function formatChange(n) {
@@ -2176,7 +2178,7 @@
     }
 
     // ============================================================
-    // LIVE MATCH MINUTE TICKER (mock mode demo only)
+    // LIVE MATCH MINUTE TICKER (fallback/local mode only)
     // ============================================================
     function startLiveTicker() {
       if (USE_MOCK_DATA) {
@@ -2668,9 +2670,9 @@
         // Set matches first — buildLeaderboard reads state.matches internally
         state.matches       = MATCHES;
         state.staffPicks    = STAFF_PICKS;
-        const mockPoints    = calculateCountryPoints(MATCHES);
-        state.countryPoints = mockPoints;
-        state.leaderboard   = buildLeaderboard(STAFF_PICKS, mockPoints);
+        const localPoints   = calculateCountryPoints(MATCHES);
+        state.countryPoints = localPoints;
+        state.leaderboard   = buildLeaderboard(STAFF_PICKS, localPoints);
         return;
       }
 
@@ -3160,7 +3162,7 @@
 
       container.innerHTML = todayMatches.map((match) => {
         const isLive = match.status === "live";
-        const minute = isLive && USE_MOCK_DATA ? state.liveMinute : null;
+        const minute = isLive && USE_MOCK_DATA ? state.liveMinute : null; // live minute only available in fallback mode
 
         const scoreBlock = isLive
           ? `<div class="match-score-block">
@@ -4040,6 +4042,8 @@
       // Build matches for the selected round
       const matchList = rounds[showRound];
       const isFinalRound = showRound.toLowerCase().includes("final") && !showRound.toLowerCase().includes("semi") && !showRound.toLowerCase().includes("third");
+      const isThirdPlaceMob = showRound.toLowerCase().includes("third");
+      const isFaceoffMob  = (isFinalRound || isThirdPlaceMob) && matchList.length === 1;
       const completed    = matchList.filter(function(m) { return m.status === "completed"; }).length;
 
       const matchesHtml = matchList.map(function(m) {
@@ -4077,6 +4081,46 @@
           : "";
         const hStaff = state.staffPicks.filter(function(p) { return p.country === hName; }).map(function(p) { return p.name.split(" ")[0]; }).join(", ");
         const aStaff = state.staffPicks.filter(function(p) { return p.country === aName; }).map(function(p) { return p.name.split(" ")[0]; }).join(", ");
+
+        // Face-off card for Final and 3rd Place
+        if (isFaceoffMob) {
+          const hFlagLg = m.homeTeam && m.homeTeam.flagCode ? `<img class="bk-faceoff-flag-lg" src="https://flagcdn.com/w80/${m.homeTeam.flagCode}.png" alt="${hName}">` : "";
+          const aFlagLg = m.awayTeam && m.awayTeam.flagCode ? `<img class="bk-faceoff-flag-lg" src="https://flagcdn.com/w80/${m.awayTeam.flagCode}.png" alt="${aName}">` : "";
+          const hPts = (state.countryPoints[hName] && state.countryPoints[hName].points) || 0;
+          const aPts = (state.countryPoints[aName] && state.countryPoints[aName].points) || 0;
+          const headerLabel = isFinalRound
+            ? (isLive ? "🏆 WORLD CUP FINAL · LIVE" : "🏆 WORLD CUP FINAL")
+            : (isLive ? "🥉 3RD PLACE · LIVE" : "🥉 THIRD PLACE PLAY-OFF");
+          const stakeText = isFinalRound && !isCompleted ? "+50 PTS TO WINNER" : "";
+          const ftLabel = mobWentToPens ? "FT · Pens" : "FT";
+          const centerHtml = (isLive || isCompleted)
+            ? `<div class="bk-faceoff-score-vs">${hScore}–${aScore}</div>
+               ${mobWentToPens ? `<div class="bk-faceoff-pens-note">Pen: ${m.homePenalties}–${m.awayPenalties}</div>` : ""}
+               <div class="bk-faceoff-date" style="margin-top:4px">${isCompleted ? ftLabel : "● LIVE"}</div>`
+            : `<div class="bk-faceoff-vs">VS</div>
+               <div class="bk-faceoff-date">${timeLabel}</div>
+               ${stakeText ? `<div class="bk-faceoff-stake">${stakeText}</div>` : ""}`;
+          return `
+            <div class="bk-faceoff${isFinalRound ? " is-final" : " is-third"}">
+              <div class="bk-faceoff-header">${headerLabel}${isLive ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--live-green);margin-left:4px;animation:pulse-live 1.5s ease-in-out infinite"></span>` : ""}</div>
+              <div class="bk-faceoff-body">
+                <div class="bk-faceoff-side${hWin ? " winner" : ""}">
+                  ${hFlagLg}
+                  <div class="bk-faceoff-country${hPick ? " is-pick" : ""}${hWin ? " is-winner" : ""}">${hName}</div>
+                  ${hStaff ? `<div class="bk-faceoff-pickers">${hStaff}</div>` : '<div class="bk-faceoff-pickers" style="color:var(--text-muted);font-style:italic">No picks</div>'}
+                  <div class="bk-faceoff-challenge-pts">${hPts} pts</div>
+                </div>
+                <div class="bk-faceoff-center">${centerHtml}</div>
+                <div class="bk-faceoff-side${aWin ? " winner" : ""}">
+                  ${aFlagLg}
+                  <div class="bk-faceoff-country${aPick ? " is-pick" : ""}${aWin ? " is-winner" : ""}">${aName}</div>
+                  ${aStaff ? `<div class="bk-faceoff-pickers">${aStaff}</div>` : '<div class="bk-faceoff-pickers" style="color:var(--text-muted);font-style:italic">No picks</div>'}
+                  <div class="bk-faceoff-challenge-pts">${aPts} pts</div>
+                </div>
+              </div>
+              ${isCompleted ? `<div class="bk-faceoff-events">${buildBkDetails(m)}</div>` : ""}
+            </div>`;
+        }
 
         return `
           <div class="mob-bracket-match${isLive ? " is-live" : ""}${isFinal ? " is-final" : ""}">
